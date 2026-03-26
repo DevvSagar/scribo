@@ -1,3 +1,6 @@
+> 🚧 **Under Active Development**  
+> This project is continuously evolving with new features, performance improvements, and production-level enhancements.
+
 # 🚀 Scribo – AI-Powered Meeting Intelligence Platform
 
 Scribo is a full-stack web application that transforms meeting recordings into structured, actionable insights using AI. It enables users to upload audio/video files and instantly receive accurate transcripts along with intelligent summaries.
@@ -111,7 +114,7 @@ PORT=5001
 
 ## 👨‍💻 Author
 
-**Sagar Singh (DevvSagar)**
+**Sagar Pratap Singh (DevvSagar)**
 Full Stack Developer | Building AI-powered applications
 
 ---
