@@ -49,7 +49,7 @@ const Footer = () => {
             </div>
           </div>
           <p className="text-center text-base leading-6 sm:text-lg lg:text-left">
-            &copy; 2026 Scribo. All Rights Reserved.
+            &copy; Built and Developed by Sagar Singh (DevvSagar)
           </p>
         </div>
 

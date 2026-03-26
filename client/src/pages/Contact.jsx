@@ -9,19 +9,20 @@ const Contact = () => {
           animate={{ opacity: 1, x: 0 }}
           className="rounded-[2rem] border border-white/10 bg-white/5 p-8"
         >
-          <p className="text-sm uppercase tracking-[0.3em] text-sky-300">Contact</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-sky-300">Hello</p>
           <h1 className="mt-4 text-4xl font-bold text-white">
             <span className="bg-gradient-to-r from-blue-300 via-sky-400 to-violet-400 bg-clip-text text-transparent">
-              Let’s build your workflow
+              Let’s build something impactful
             </span>
           </h1>
           <p className="mt-4 leading-8 text-slate-300">
-            Tell us how your team records meetings and what output you want to automate.
+            Interested in AI-powered tools, web apps, or collaboration?  
+Feel free to reach out.
           </p>
           <div className="mt-8 space-y-4 text-slate-400">
-            <p>hello@scribo.ai</p>
-            <p>Mon - Fri, 9:00 AM to 6:00 PM</p>
-            <p>Remote-first team</p>
+            <p>📧  Deevvxxx@gmail.com</p>
+            <p>🕒  Available for opportunities</p>
+            <p>🌍  Open to remote work</p>
           </div>
         </motion.div>
 
