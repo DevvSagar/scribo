@@ -122,3 +122,8 @@ Full Stack Developer | Building AI-powered applications
 ## ⭐ Show Your Support
 
 If you found this project useful, consider giving it a ⭐ on GitHub!
+
+## 🖼️ Preview
+
+### 🔹 Clean and modern upload interface
+![Scribo UI](./client/src/assets/Home.png)
