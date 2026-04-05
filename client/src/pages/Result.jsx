@@ -88,7 +88,7 @@ const renderHighlightedText = (text, terms) => {
       return (
         <mark
           key={`${part}-${index}`}
-          className="rounded bg-blue-400/20 px-1 py-0.5 text-blue-100"
+          className="rounded bg-white/15 px-1 py-0.5 text-white"
         >
           {part}
         </mark>
@@ -212,42 +212,42 @@ const Result = () => {
   };
 
   const SkeletonBlock = ({ className }) => (
-    <div className={`animate-pulse rounded-2xl bg-white/8 ${className}`} />
+    <div className={`animate-pulse rounded-2xl bg-black/6 ${className}`} />
   );
 
   return (
     <section className="relative overflow-hidden px-5 py-10 sm:px-8 lg:px-10 lg:py-14 xl:px-12 xl:py-18 2xl:px-16">
-      <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.2),transparent_60%)]" />
+      <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-5 rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur sm:p-8"
+          className="flex flex-col gap-5 rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:p-8"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-sky-300">Result</p>
-              <p className="mt-3 text-sm font-medium text-sky-200">
+              <p className="text-sm uppercase tracking-[0.28em] text-[#7a7a7a]">Result</p>
+              <p className="mt-3 text-sm font-medium text-[#3f3f3f]">
                 This summary was generated using AI from your uploaded audio.
               </p>
-              <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl">
                 AI Analysis Complete
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f5f5f] sm:text-base">
                 Your meeting has been processed successfully. Review your AI summary, highlights, and transcript for{" "}
-                <span className="font-medium text-white">{fileName || "your upload"}</span>.
+                <span className="font-medium text-[#1f1f1f]">{fileName || "your upload"}</span>.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-3">
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                  Status: <span className="font-medium capitalize text-white">{result.status}</span>
+                <div className="rounded-full border border-black/8 bg-[#fafafa] px-4 py-2 text-sm text-[#5f5f5f]">
+                  Status: <span className="font-medium capitalize text-[#1f1f1f]">{result.status}</span>
                 </div>
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                  Transcript words: <span className="font-medium text-white">{transcriptWordCount || 0}</span>
+                <div className="rounded-full border border-black/8 bg-[#fafafa] px-4 py-2 text-sm text-[#5f5f5f]">
+                  Transcript words: <span className="font-medium text-[#1f1f1f]">{transcriptWordCount || 0}</span>
                 </div>
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                  Highlights: <span className="font-medium text-white">{highlights.length}</span>
+                <div className="rounded-full border border-black/8 bg-[#fafafa] px-4 py-2 text-sm text-[#5f5f5f]">
+                  Highlights: <span className="font-medium text-[#1f1f1f]">{highlights.length}</span>
                 </div>
               </div>
             </div>
@@ -255,7 +255,7 @@ const Result = () => {
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="rounded-full border border-white/10 bg-transparent px-6 py-3 text-sm font-medium text-slate-300 transition duration-300 hover:border-blue-400 hover:text-white"
+              className="rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
             >
               Upload another file
             </button>
@@ -268,36 +268,36 @@ const Result = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
             whileHover={{ y: -4 }}
-            className="rounded-[2rem] border border-blue-400/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(59,130,246,0.08),rgba(139,92,246,0.06))] p-6 shadow-2xl shadow-blue-950/20 backdrop-blur transition-shadow duration-300 hover:shadow-blue-900/30 sm:p-8"
+            className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_22px_55px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_26px_65px_rgba(0,0,0,0.08)] sm:p-8"
           >
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <div className="flex items-center gap-3 text-sky-300">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                <div className="flex items-center gap-3 text-[#1f1f1f]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f2f2f2]">
                     <SectionIcon type="summary" />
                   </div>
                   <p className="text-sm uppercase tracking-[0.22em]">Summary</p>
                 </div>
-                <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">AI notes</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl">AI notes</h2>
+                <p className="mt-2 text-sm leading-6 text-[#5f5f5f]">
                   Clean, presentation-ready takeaways from your uploaded meeting.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <span className="rounded-full bg-emerald-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                <span className="rounded-full bg-[#f3f3f3] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]">
                   {result.status}
                 </span>
                 <button
                   type="button"
                   onClick={handleCopySummary}
-                  className="rounded-full bg-gradient-to-r from-blue-500 via-sky-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition duration-300 hover:-translate-y-0.5 hover:brightness-110"
+                  className="rounded-full bg-[#1f1f1f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:bg-black"
                 >
                   {copyLabel}
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadText}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition duration-300 hover:border-blue-400 hover:text-white"
+                  className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
                 >
                   Download as text
                 </button>
@@ -318,24 +318,24 @@ const Result = () => {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.12 + index * 0.04 }}
-                    className="rounded-[1.5rem] border border-white/10 bg-gradient-to-r from-white/6 to-blue-500/6 p-6 transition-shadow duration-300 hover:shadow-lg hover:shadow-blue-950/20 sm:p-7"
+                    className="rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-6 transition-shadow duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.05)] sm:p-7"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 text-lg">
+                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f0f0f0] text-lg">
                         {section.icon}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-lg font-semibold text-white">{section.title}</p>
+                        <p className="text-lg font-semibold text-[#1f1f1f]">{section.title}</p>
                         {section.items.length > 0 ? (
                           <div className="mt-3 space-y-2">
                             {section.items.map((item) => (
-                              <p key={item} className="text-base leading-8 text-slate-200">
+                              <p key={item} className="text-base leading-8 text-[#3f3f3f]">
                                 {section.title === "Main Idea" ? item : `• ${item}`}
                               </p>
                             ))}
                           </div>
                         ) : (
-                          <p className="mt-3 text-base leading-8 text-slate-400">
+                          <p className="mt-3 text-base leading-8 text-[#5f5f5f]">
                             No items extracted for this section.
                           </p>
                         )}
@@ -352,16 +352,16 @@ const Result = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.14 }}
             whileHover={{ y: -4 }}
-            className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-2xl shadow-blue-950/20 transition-shadow duration-300 hover:shadow-blue-900/25 sm:p-8"
+            className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_22px_55px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_26px_65px_rgba(0,0,0,0.08)] sm:p-8"
           >
-            <div className="flex items-center gap-3 text-sky-300">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+            <div className="flex items-center gap-3 text-[#1f1f1f]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f2f2f2]">
                 <SectionIcon type="highlights" />
               </div>
               <p className="text-sm uppercase tracking-[0.22em]">Important Points</p>
             </div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">Key topics</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <h2 className="mt-4 text-2xl font-semibold text-[#1f1f1f]">Key topics</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5f5f5f]">
               Fast-scan talking points you can present or export immediately.
             </p>
 
@@ -379,16 +379,16 @@ const Result = () => {
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.14 + index * 0.05 }}
-                    className="rounded-[1.4rem] border border-blue-400/20 bg-gradient-to-r from-blue-500/10 to-violet-500/10 px-4 py-4 text-sm leading-6 text-blue-100 transition-transform duration-300 hover:-translate-y-0.5"
+                    className="rounded-[1.4rem] border border-black/8 bg-[#fafafa] px-4 py-4 text-sm leading-6 text-[#3f3f3f] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(0,0,0,0.05)]"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="mt-1 h-2.5 w-2.5 rounded-full bg-sky-300" />
+                      <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1f1f1f]" />
                       <p>{highlight.text}</p>
                     </div>
                   </motion.div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-6 text-slate-300">
+                <div className="rounded-2xl border border-black/8 bg-[#fafafa] px-4 py-3 text-sm leading-6 text-[#5f5f5f]">
                   No highlights were returned for this transcript.
                 </div>
               )}
@@ -401,18 +401,18 @@ const Result = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           whileHover={{ y: -4 }}
-          className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-2xl shadow-blue-950/20 transition-shadow duration-300 hover:shadow-blue-900/25 sm:p-8"
+          className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_22px_55px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_26px_65px_rgba(0,0,0,0.08)] sm:p-8"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-3 text-sky-300">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+              <div className="flex items-center gap-3 text-[#1f1f1f]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f2f2f2]">
                   <SectionIcon type="transcript" />
                 </div>
                 <p className="text-sm uppercase tracking-[0.22em]">Transcript</p>
               </div>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Full transcript</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <h2 className="mt-2 text-2xl font-semibold text-[#1f1f1f]">Full transcript</h2>
+              <p className="mt-2 text-sm leading-6 text-[#5f5f5f]">
                 Expand to inspect the full conversation text captured from the audio.
               </p>
             </div>
@@ -420,7 +420,7 @@ const Result = () => {
             <button
               type="button"
               onClick={() => setShowFullTranscript((current) => !current)}
-              className="rounded-full border border-white/10 bg-transparent px-6 py-3 text-sm font-medium text-slate-300 transition duration-300 hover:border-blue-400 hover:text-white"
+              className="rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
             >
               {showFullTranscript ? "Show less" : "Expand transcript"}
             </button>
@@ -432,7 +432,7 @@ const Result = () => {
               value={transcriptSearch}
               onChange={(event) => setTranscriptSearch(event.target.value)}
               placeholder="Search in transcript..."
-              className="w-full rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
+              className="w-full rounded-[1.25rem] border border-black/10 bg-[#fafafa] px-4 py-3 text-sm text-[#1f1f1f] outline-none placeholder:text-[#9d9d9d] focus:border-black/20"
             />
           </div>
 
@@ -443,7 +443,7 @@ const Result = () => {
               animate={{ opacity: 1, height: showFullTranscript ? "auto" : 190 }}
               exit={{ opacity: 0, height: 120 }}
               transition={{ duration: 0.28, ease: "easeOut" }}
-              className="relative mt-6 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5"
+              className="relative mt-6 overflow-hidden rounded-[1.5rem] border border-black/8 bg-[#fafafa]"
             >
               <div
                 ref={transcriptScrollRef}
@@ -460,7 +460,7 @@ const Result = () => {
                 ) : (
                   <p
                     className={[
-                      "whitespace-pre-line text-sm leading-8 text-slate-300 sm:text-base",
+                      "whitespace-pre-line text-sm leading-8 text-[#3f3f3f] sm:text-base",
                       showFullTranscript ? "" : "line-clamp-6",
                     ].join(" ")}
                   >
@@ -469,7 +469,7 @@ const Result = () => {
                 )}
               </div>
               {showTranscriptFade && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/95 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#fafafa] to-transparent" />
               )}
             </motion.div>
           </AnimatePresence>

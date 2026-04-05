@@ -13,19 +13,19 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-black/8 bg-white/90 backdrop-blur-xl">
       <div className="grid w-full grid-cols-[auto_1fr] items-center gap-6 px-5 py-4 sm:px-8 lg:px-10 xl:px-12 2xl:px-16">
         <div className="flex items-center gap-4 xl:gap-5">
           <img
             src="/scribo-logo.png"
             alt="Scribo logo"
-            className="h-12 w-12 rounded-2xl object-cover object-top ring-1 ring-white/10 xl:h-14 xl:w-14"
+            className="h-12 w-12 rounded-2xl object-cover object-top ring-1 ring-black/8 xl:h-14 xl:w-14"
           />
           <div>
-            <p className="bg-gradient-to-r from-blue-300 via-sky-400 to-violet-400 bg-clip-text text-lg font-semibold tracking-wide text-transparent xl:text-xl">
+            <p className="text-lg font-semibold tracking-wide text-[#1f1f1f] xl:text-xl">
               Scribo
             </p>
-            <p className="text-[0.65rem] uppercase tracking-[0.32em] text-slate-400 xl:text-[0.72rem]">
+            <p className="text-[0.65rem] uppercase tracking-[0.32em] text-[#7a7a7a] xl:text-[0.72rem]">
               AI meeting notes
             </p>
           </div>
@@ -44,15 +44,15 @@ const Navbar = () => {
                     <span
                       className={[
                         "transition-all duration-300",
-                        isActive ? "text-blue-300" : "text-slate-300 group-hover:text-white group-hover:-translate-y-0.5",
+                        isActive ? "text-[#1f1f1f]" : "text-[#666666] group-hover:text-[#1f1f1f] group-hover:-translate-y-0.5",
                       ].join(" ")}
                     >
                       {link.label}
                     </span>
                     <span
                       className={[
-                        "absolute -bottom-2 left-0 h-0.5 rounded-full bg-gradient-to-r from-blue-400 via-sky-400 to-violet-400 transition-all duration-300",
-                        isActive ? "w-full opacity-100 shadow-[0_0_12px_rgba(59,130,246,0.5)]" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
+                        "absolute -bottom-2 left-0 h-0.5 rounded-full bg-[#1f1f1f] transition-all duration-300",
+                        isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
                       ].join(" ")}
                     />
                   </>
@@ -65,7 +65,7 @@ const Navbar = () => {
         <button
           type="button"
           aria-label="Toggle navigation"
-          className="inline-flex justify-self-end rounded-xl border border-white/10 bg-white/5 p-3 text-slate-200 md:hidden"
+          className="inline-flex justify-self-end rounded-xl border border-black/10 bg-[#fafafa] p-3 text-[#1f1f1f] md:hidden"
           onClick={() => setIsOpen((open) => !open)}
         >
           <span className="text-lg leading-none">{isOpen ? "✕" : "☰"}</span>
@@ -77,7 +77,7 @@ const Navbar = () => {
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
-          className="border-t border-white/10 px-5 py-4 md:hidden"
+          className="border-t border-black/8 px-5 py-4 md:hidden"
         >
           <div className="flex w-full flex-col gap-4 sm:px-3">
             {navLinks.map((link) => (
@@ -87,7 +87,7 @@ const Navbar = () => {
                 className={({ isActive }) =>
                   [
                     "text-sm font-medium tracking-wide transition-colors duration-300",
-                    isActive ? "text-blue-300" : "text-slate-300 hover:text-white",
+                    isActive ? "text-[#1f1f1f]" : "text-[#666666] hover:text-[#1f1f1f]",
                   ].join(" ")
                 }
                 onClick={() => setIsOpen(false)}

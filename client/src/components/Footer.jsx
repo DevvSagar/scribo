@@ -30,20 +30,20 @@ const socialLinks = [
 
 const Footer = () => {
   return (
-    <footer className="border-t border-white/10 bg-slate-950/80">
-      <div className="flex w-full flex-col gap-5 px-6 py-6 text-slate-400 sm:px-8 lg:flex-row lg:items-end lg:justify-between lg:px-10 xl:px-12 xl:py-7 2xl:px-16">
+    <footer className="border-t border-black/8 bg-white">
+      <div className="flex w-full flex-col gap-5 px-6 py-6 text-[#666666] sm:px-8 lg:flex-row lg:items-end lg:justify-between lg:px-10 xl:px-12 xl:py-7 2xl:px-16">
         <div className="flex flex-col items-center gap-3 lg:items-start">
           <div className="flex items-center gap-3">
             <img
               src="/scribo-logo.png"
               alt="Scribo logo"
-              className="h-11 w-11 rounded-2xl object-cover object-top ring-1 ring-white/10 xl:h-12 xl:w-12"
+              className="h-11 w-11 rounded-2xl object-cover object-top ring-1 ring-black/8 xl:h-12 xl:w-12"
             />
             <div>
-              <p className="bg-gradient-to-r from-blue-300 via-sky-400 to-violet-400 bg-clip-text text-lg font-semibold text-transparent xl:text-xl">
+              <p className="text-lg font-semibold text-[#1f1f1f] xl:text-xl">
                 Scribo
               </p>
-              <p className="text-[0.7rem] uppercase tracking-[0.32em] text-slate-500 xl:text-xs">
+              <p className="text-[0.7rem] uppercase tracking-[0.32em] text-[#7a7a7a] xl:text-xs">
                 Smart meeting notes
               </p>
             </div>
@@ -53,7 +53,7 @@ const Footer = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 text-slate-300 lg:justify-end xl:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-[#555555] lg:justify-end xl:gap-4">
           {socialLinks.map((link) => (
             <a
               key={link.label}
@@ -61,7 +61,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer"
               aria-label={link.label}
-              className="rounded-full border border-white/10 bg-white/5 p-2.5 transition duration-300 hover:-translate-y-1 hover:border-blue-400 hover:text-white xl:p-3"
+              className="rounded-full border border-black/10 bg-[#fafafa] p-2.5 transition duration-300 hover:-translate-y-1 hover:border-black/20 hover:bg-[#f2f2f2] hover:text-[#1f1f1f] xl:p-3"
             >
               {link.icon}
             </a>

@@ -50,26 +50,26 @@ const Home = () => {
   const uploadStatus = !file
     ? {
         label: "Waiting",
-        className: "bg-slate-700/40 text-slate-300",
+        className: "bg-[#f1f1f1] text-[#5f5f5f]",
       }
     : uploadPhase === "processing"
       ? {
           label: loadingStage || "Processing",
-          className: "bg-blue-500/15 text-blue-200",
+          className: "bg-[#1f1f1f] text-white",
         }
       : uploadPhase === "done"
         ? {
             label: "Ready",
-            className: "bg-emerald-500/15 text-emerald-300",
+            className: "bg-[#1f1f1f] text-white",
           }
         : file.size > LARGE_FILE_SIZE
           ? {
               label: "Large file",
-              className: "bg-amber-500/15 text-amber-300",
+              className: "bg-[#ebebeb] text-[#4f4f4f]",
             }
           : {
               label: "Selected",
-              className: "bg-emerald-500/15 text-emerald-300",
+              className: "bg-[#1f1f1f] text-white",
             };
 
   const uploadButtonLabel =
@@ -234,7 +234,7 @@ const Home = () => {
 
   return (
     <section className="relative overflow-hidden px-5 py-10 sm:px-8 lg:px-10 lg:py-12 xl:px-12 xl:py-16 2xl:px-16">
-      <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_60%)]" />
+      <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
 
       <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 items-start gap-10 md:gap-12 lg:grid-cols-12 xl:gap-14 2xl:gap-16">
         <motion.div
@@ -249,25 +249,25 @@ const Home = () => {
             transition={{ duration: 0.7 }}
             className="flex w-full max-w-3xl flex-col items-center lg:max-w-none lg:items-start"
           >
-            <span className="inline-flex min-h-14 items-center rounded-full border border-blue-400/30 bg-blue-500/10 px-6 py-3 text-base font-medium text-blue-100 shadow-[0_0_0_1px_rgba(59,130,246,0.08)] sm:text-lg">
+            <span className="inline-flex min-h-14 items-center rounded-full border border-black/8 bg-[#fafafa] px-6 py-3 text-base font-medium text-[#1f1f1f] shadow-[0_12px_30px_rgba(0,0,0,0.04)] sm:text-lg">
               Built for teams, founders, and client calls
             </span>
           </motion.div>
 
           <motion.h1
-            className="mt-5 max-w-4xl text-[2.9rem] font-bold leading-[0.96] text-white sm:text-[3.7rem] lg:mt-6 lg:max-w-none lg:text-[4.15rem] xl:text-[4.75rem] 2xl:text-[5.2rem]"
+            className="mt-5 max-w-4xl text-[2.9rem] font-bold leading-[0.96] text-[#1f1f1f] sm:text-[3.7rem] lg:mt-6 lg:max-w-none lg:text-[4.15rem] xl:text-[4.75rem] 2xl:text-[5.2rem]"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.7 }}
           >
             Turn meeting recordings into
-            <span className="block bg-gradient-to-r from-blue-300 via-sky-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="block text-[#4f4f4f]">
               smart notes and action items
             </span>
           </motion.h1>
 
           <motion.p
-            className="mt-4 max-w-2xl text-base leading-7 text-slate-300 lg:max-w-[38rem] xl:text-[1.05rem]"
+            className="mt-4 max-w-2xl text-base leading-7 text-[#5f5f5f] lg:max-w-[38rem] xl:text-[1.05rem]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.7 }}
@@ -282,7 +282,7 @@ const Home = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <button className="rounded-full border border-white/10 bg-transparent px-8 py-3.5 text-base font-medium text-slate-300 transition duration-300 hover:border-blue-400 hover:text-white">
+            <button className="rounded-full border border-black/10 bg-white px-8 py-3.5 text-base font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]">
               Watch demo
             </button>
           </motion.div>
@@ -295,15 +295,15 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 + index * 0.1, duration: 0.6 }}
                 whileHover={{ y: -6, scale: 1.01 }}
-                className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur transition-shadow duration-300 hover:border-blue-400/25 hover:shadow-lg hover:shadow-blue-950/25 xl:p-5"
+                className="rounded-[1.4rem] border border-black/8 bg-[#fafafa] p-4 transition-shadow duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(0,0,0,0.06)] xl:p-5"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-sky-300">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f0f0f0] text-[#1f1f1f]">
                   {stat.icon}
                 </div>
-                <p className="bg-gradient-to-r from-blue-300 to-sky-400 bg-clip-text text-[1.9rem] font-semibold text-transparent xl:text-[2.2rem]">
+                <p className="text-[1.9rem] font-semibold text-[#1f1f1f] xl:text-[2.2rem]">
                   {stat.value}
                 </p>
-                <p className="mt-1.5 text-sm leading-5 text-slate-400">{stat.label}</p>
+                <p className="mt-1.5 text-sm leading-5 text-[#5f5f5f]">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -316,7 +316,7 @@ const Home = () => {
           className="relative col-span-1 mx-auto flex w-full max-w-[620px] justify-center lg:col-span-6 lg:mx-0 lg:w-full lg:max-w-none lg:justify-self-center xl:col-span-5 xl:max-w-[680px]"
         >
           <motion.div
-            className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-blue-500/10 blur-3xl"
+            className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-black/4 blur-3xl"
             animate={{
               opacity: isDragging ? 0.45 : [0.22, 0.34, 0.22],
               scale: isDragging ? 1.03 : [1, 1.04, 1],
@@ -333,8 +333,8 @@ const Home = () => {
               isDragging
                 ? {
                     y: -6,
-                    borderColor: "rgba(96, 165, 250, 0.4)",
-                    boxShadow: "0 18px 50px rgba(29, 78, 216, 0.22)",
+                    borderColor: "rgba(31, 31, 31, 0.18)",
+                    boxShadow: "0 18px 50px rgba(0, 0, 0, 0.08)",
                   }
                 : file
                   ? { y: [0, -4, 0] }
@@ -343,29 +343,29 @@ const Home = () => {
             transition={{ duration: 0.45, ease: "easeOut" }}
             whileHover={{
               y: -4,
-              boxShadow: "0 20px 55px rgba(15, 23, 42, 0.55)",
-              borderColor: "rgba(96, 165, 250, 0.22)",
+              boxShadow: "0 20px 55px rgba(0, 0, 0, 0.3)",
+              borderColor: "rgba(31, 31, 31, 0.12)",
             }}
-            className="flex w-full max-w-[640px] flex-col rounded-[2.2rem] border border-white/10 bg-slate-950/80 p-5 shadow-2xl shadow-blue-950/40 backdrop-blur sm:p-6 xl:p-7"
+            className="flex w-full max-w-[640px] flex-col rounded-[2.2rem] border border-black/8 bg-white p-5 shadow-[0_24px_60px_rgba(0,0,0,0.07)] sm:p-6 xl:p-7"
           >
             <motion.div
               animate={
                 file
                   ? {
-                      borderColor: "rgba(96, 165, 250, 0.35)",
-                      boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.12)",
+                      borderColor: "rgba(31, 31, 31, 0.14)",
+                      boxShadow: "0 0 0 1px rgba(31, 31, 31, 0.04)",
                     }
                   : {
-                      borderColor: "rgba(255, 255, 255, 0.1)",
+                      borderColor: "rgba(0, 0, 0, 0.08)",
                       boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
                     }
               }
               transition={{ duration: 0.3 }}
-              className="flex min-h-[82px] items-center justify-between gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 px-5 py-3 xl:px-6"
+              className="flex min-h-[82px] items-center justify-between gap-4 rounded-[1.5rem] border border-black/8 bg-[#fafafa] px-5 py-3 xl:px-6"
             >
               <div>
-                <p className="text-sm text-slate-400 xl:text-base">Current upload</p>
-                <p className="text-base font-medium text-white xl:text-xl">
+                <p className="text-sm text-[#7a7a7a] xl:text-base">Current upload</p>
+                <p className="text-base font-medium text-[#1f1f1f] xl:text-xl">
                   {file ? file.name : "No file selected"}
                 </p>
               </div>
@@ -378,21 +378,21 @@ const Home = () => {
               animate={
                 isDragging
                   ? {
-                      borderColor: "rgba(96, 165, 250, 0.75)",
-                      backgroundColor: "rgba(59, 130, 246, 0.14)",
+                      borderColor: "rgba(31, 31, 31, 0.2)",
+                      backgroundColor: "rgba(0, 0, 0, 0.02)",
                     }
                   : file
                   ? {
-                      borderColor: "rgba(96, 165, 250, 0.55)",
-                      backgroundColor: "rgba(59, 130, 246, 0.09)",
+                      borderColor: "rgba(31, 31, 31, 0.14)",
+                      backgroundColor: "rgba(0, 0, 0, 0.015)",
                     }
                   : {
-                      borderColor: "rgba(96, 165, 250, 0.3)",
-                      backgroundColor: "rgba(59, 130, 246, 0.05)",
+                      borderColor: "rgba(31, 31, 31, 0.12)",
+                      backgroundColor: "rgba(0, 0, 0, 0.01)",
                     }
               }
               transition={{ duration: 0.3 }}
-              className="mt-6 flex min-h-[300px] flex-col justify-center rounded-[1.8rem] border border-dashed border-blue-400/30 bg-blue-500/5 p-5 text-center xl:min-h-[330px] xl:p-6"
+              className="mt-6 flex min-h-[300px] flex-col justify-center rounded-[1.8rem] border border-dashed border-black/12 bg-[#fafafa] p-5 text-center xl:min-h-[330px] xl:p-6"
               onDragOver={handleDragOver}
               onDragEnter={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -407,15 +407,15 @@ const Home = () => {
                       : { scale: 1, rotate: 0 }
                 }
                 transition={{ duration: 0.45, ease: "easeOut" }}
-                className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-blue-500/25 to-violet-500/25 text-3xl text-sky-300 xl:h-18 xl:w-18"
+                className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-[#f0f0f0] text-3xl text-[#1f1f1f] xl:h-18 xl:w-18"
               >
                 ↑
               </motion.div>
 
-              <p className="mt-4 text-xl font-semibold text-white xl:text-2xl">
+              <p className="mt-4 text-xl font-semibold text-[#1f1f1f] xl:text-2xl">
                 {isDragging ? "Drop your file here" : "Drop audio or choose a file"}
               </p>
-              <p className="mt-2 text-sm leading-6 text-slate-400 xl:text-base">
+              <p className="mt-2 text-sm leading-6 text-[#5f5f5f] xl:text-base">
                 {isDragging
                   ? "Release to attach your recording and start the flow."
                   : "Supports MP3, WAV, M4A and long-form call recordings."}
@@ -423,21 +423,21 @@ const Home = () => {
 
               <input
                 type="file"
-                className="mt-5 block w-full rounded-[1.25rem] border border-white/10 bg-slate-900 px-4 py-3.5 text-sm text-slate-300 file:mr-4 file:rounded-full file:border-0 file:bg-blue-600 file:px-5 file:py-2.5 file:font-medium file:text-white xl:text-base"
+                className="mt-5 block w-full rounded-[1.25rem] border border-black/10 bg-white px-4 py-3.5 text-sm text-[#1f1f1f] file:mr-4 file:rounded-full file:border-0 file:bg-[#1f1f1f] file:px-5 file:py-2.5 file:font-medium file:text-white xl:text-base"
                 onChange={handleFileChange}
               />
 
               {(uploadPhase === "processing" || uploadPhase === "done") && (
                 <div className="mt-4">
-                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-2 overflow-hidden rounded-full bg-black/8">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-500 via-sky-400 to-violet-500"
+                      className="h-full rounded-full bg-[#1f1f1f]"
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
                     />
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+                  <div className="mt-2 flex items-center justify-between text-xs text-[#5f5f5f]">
                     <span>{uploadPhase === "done" ? "Summary ready to view" : loadingStage}</span>
                     <span>{progress}%</span>
                   </div>
@@ -453,7 +453,7 @@ const Home = () => {
               <motion.button
                 animate={file ? { scale: [1, 1.02, 1] } : { scale: 1 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="mt-4 w-full rounded-[1.25rem] bg-gradient-to-r from-blue-500 via-sky-500 to-violet-500 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-950/40 transition duration-300 hover:-translate-y-1 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
+                className="mt-4 w-full rounded-[1.25rem] bg-[#1f1f1f] py-3.5 text-base font-semibold text-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
                 disabled={!file || uploadPhase === "processing"}
                 onClick={handleUploadAction}
               >
@@ -462,13 +462,13 @@ const Home = () => {
             </motion.div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:gap-5">
-              <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                <p className="text-sm text-slate-400 xl:text-base">AI output</p>
-                <p className="mt-3 text-lg font-semibold text-white xl:text-xl">Summary, tasks, highlights</p>
+              <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-5">
+                <p className="text-sm text-[#7a7a7a] xl:text-base">AI output</p>
+                <p className="mt-3 text-lg font-semibold text-[#1f1f1f] xl:text-xl">Summary, tasks, highlights</p>
               </div>
-              <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                <p className="text-sm text-slate-400 xl:text-base">Export options</p>
-                <p className="mt-3 text-lg font-semibold text-white xl:text-xl">Markdown, PDF, Notion</p>
+              <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-5">
+                <p className="text-sm text-[#7a7a7a] xl:text-base">Export options</p>
+                <p className="mt-3 text-lg font-semibold text-[#1f1f1f] xl:text-xl">Markdown, PDF, Notion</p>
               </div>
             </div>
           </motion.div>
