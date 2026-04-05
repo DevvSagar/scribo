@@ -1,10 +1,14 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const Contact = () => {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <section className="px-4 py-16 sm:px-6">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="rounded-[2rem] border border-black/8 bg-[#fafafa] p-8 shadow-[0_18px_45px_rgba(0,0,0,0.04)]"
@@ -22,11 +26,12 @@ Feel free to reach out.
             <p>🕒  Available for opportunities</p>
             <p>🌍  Open to remote work</p>
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.form
+        <Motion.form
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
+          onSubmit={handleSubmit}
           className="rounded-[2rem] border border-black/8 bg-white p-8 shadow-[0_18px_45px_rgba(0,0,0,0.04)]"
         >
           <div className="grid gap-5 sm:grid-cols-2">
@@ -38,7 +43,7 @@ Feel free to reach out.
           <button className="mt-5 rounded-full bg-[#1f1f1f] px-6 py-3 font-semibold text-white transition duration-300 hover:-translate-y-1 hover:bg-black">
             Send message
           </button>
-        </motion.form>
+        </Motion.form>
       </div>
     </section>
   );

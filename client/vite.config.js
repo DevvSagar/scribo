@@ -7,4 +7,10 @@ export default defineConfig({
     react(),        // ✅ MUST be enabled
     tailwindcss(),  // ✅ Tailwind plugin (new way)
   ],
+  server: {
+    // Avoid native macOS file-watch issues when fsevents is blocked by Gatekeeper.
+    watch: {
+      usePolling: true,
+    },
+  },
 });

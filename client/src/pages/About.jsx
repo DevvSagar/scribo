@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const About = () => {
   return (
     <section className="px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           className="mx-auto max-w-3xl text-center"
@@ -17,7 +17,7 @@ const About = () => {
             Scribo helps teams move from raw conversations to clear summaries,
             action items, and searchable knowledge.
           </p>
-        </motion.div>
+        </Motion.div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {[
@@ -25,7 +25,7 @@ const About = () => {
             ["Team friendly", "Keep decisions, blockers, and follow-ups visible."],
             ["Built to scale", "Works for solo founders and growing operations teams."],
           ].map(([title, description], index) => (
-            <motion.div
+            <Motion.div
               key={title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -34,7 +34,7 @@ const About = () => {
             >
               <h2 className="text-xl font-semibold text-[#1f1f1f]">{title}</h2>
               <p className="mt-3 leading-7 text-[#5f5f5f]">{description}</p>
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
       </div>

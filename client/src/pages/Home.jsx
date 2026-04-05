@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -178,7 +178,7 @@ const Home = () => {
         resetUploadState();
         navigate("/result", { state: payload });
       }, 350);
-    } catch (error) {
+    } catch {
       setUploadPhase("idle");
       setProgress(0);
       setLoadingStage("");
@@ -237,13 +237,13 @@ const Home = () => {
       <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
 
       <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 items-start gap-10 md:gap-12 lg:grid-cols-12 xl:gap-14 2xl:gap-16">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           className="col-span-1 flex min-w-0 flex-col items-center pt-2 text-center lg:col-span-6 lg:items-start lg:pt-3 lg:text-left xl:col-span-7 xl:pt-4"
         >
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
@@ -252,9 +252,9 @@ const Home = () => {
             <span className="inline-flex min-h-14 items-center rounded-full border border-black/8 bg-[#fafafa] px-6 py-3 text-base font-medium text-[#1f1f1f] shadow-[0_12px_30px_rgba(0,0,0,0.04)] sm:text-lg">
               Built for teams, founders, and client calls
             </span>
-          </motion.div>
+          </Motion.div>
 
-          <motion.h1
+          <Motion.h1
             className="mt-5 max-w-4xl text-[2.9rem] font-bold leading-[0.96] text-[#1f1f1f] sm:text-[3.7rem] lg:mt-6 lg:max-w-none lg:text-[4.15rem] xl:text-[4.75rem] 2xl:text-[5.2rem]"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -264,9 +264,9 @@ const Home = () => {
             <span className="block text-[#4f4f4f]">
               smart notes and action items
             </span>
-          </motion.h1>
+          </Motion.h1>
 
-          <motion.p
+          <Motion.p
             className="mt-4 max-w-2xl text-base leading-7 text-[#5f5f5f] lg:max-w-[38rem] xl:text-[1.05rem]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -274,9 +274,9 @@ const Home = () => {
           >
             Upload your audio, extract key decisions, and deliver polished summaries
             your team can scan in seconds.
-          </motion.p>
+          </Motion.p>
 
-          <motion.div
+          <Motion.div
             className="mt-6 flex w-full max-w-2xl flex-col gap-4 sm:flex-row sm:justify-center lg:max-w-none lg:justify-start"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -285,11 +285,11 @@ const Home = () => {
             <button className="rounded-full border border-black/10 bg-white px-8 py-3.5 text-base font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]">
               Watch demo
             </button>
-          </motion.div>
+          </Motion.div>
 
           <div className="mt-7 grid w-full max-w-3xl gap-3.5 sm:grid-cols-3 lg:max-w-[44rem] xl:gap-4">
             {stats.map((stat, index) => (
-              <motion.div
+              <Motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -304,18 +304,18 @@ const Home = () => {
                   {stat.value}
                 </p>
                 <p className="mt-1.5 text-sm leading-5 text-[#5f5f5f]">{stat.label}</p>
-              </motion.div>
+              </Motion.div>
             ))}
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7 }}
           className="relative col-span-1 mx-auto flex w-full max-w-[620px] justify-center lg:col-span-6 lg:mx-0 lg:w-full lg:max-w-none lg:justify-self-center xl:col-span-5 xl:max-w-[680px]"
         >
-          <motion.div
+          <Motion.div
             className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-black/4 blur-3xl"
             animate={{
               opacity: isDragging ? 0.45 : [0.22, 0.34, 0.22],
@@ -328,7 +328,7 @@ const Home = () => {
             }}
           />
 
-          <motion.div
+          <Motion.div
             animate={
               isDragging
                 ? {
@@ -348,7 +348,7 @@ const Home = () => {
             }}
             className="flex w-full max-w-[640px] flex-col rounded-[2.2rem] border border-black/8 bg-white p-5 shadow-[0_24px_60px_rgba(0,0,0,0.07)] sm:p-6 xl:p-7"
           >
-            <motion.div
+            <Motion.div
               animate={
                 file
                   ? {
@@ -372,9 +372,9 @@ const Home = () => {
               <span className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium xl:text-sm ${uploadStatus.className}`}>
                 {uploadStatus.label}
               </span>
-            </motion.div>
+            </Motion.div>
 
-            <motion.div
+            <Motion.div
               animate={
                 isDragging
                   ? {
@@ -398,7 +398,7 @@ const Home = () => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <motion.div
+              <Motion.div
                 animate={
                   isDragging
                     ? { scale: 1.12, rotate: -8 }
@@ -410,7 +410,7 @@ const Home = () => {
                 className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-[#f0f0f0] text-3xl text-[#1f1f1f] xl:h-18 xl:w-18"
               >
                 ↑
-              </motion.div>
+              </Motion.div>
 
               <p className="mt-4 text-xl font-semibold text-[#1f1f1f] xl:text-2xl">
                 {isDragging ? "Drop your file here" : "Drop audio or choose a file"}
@@ -424,13 +424,14 @@ const Home = () => {
               <input
                 type="file"
                 className="mt-5 block w-full rounded-[1.25rem] border border-black/10 bg-white px-4 py-3.5 text-sm text-[#1f1f1f] file:mr-4 file:rounded-full file:border-0 file:bg-[#1f1f1f] file:px-5 file:py-2.5 file:font-medium file:text-white xl:text-base"
+                accept=".mp3,.wav,.m4a,.mp4,audio/*,video/mp4"
                 onChange={handleFileChange}
               />
 
               {(uploadPhase === "processing" || uploadPhase === "done") && (
                 <div className="mt-4">
                   <div className="h-2 overflow-hidden rounded-full bg-black/8">
-                    <motion.div
+                    <Motion.div
                       className="h-full rounded-full bg-[#1f1f1f]"
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
@@ -450,7 +451,7 @@ const Home = () => {
                 </p>
               )}
 
-              <motion.button
+              <Motion.button
                 animate={file ? { scale: [1, 1.02, 1] } : { scale: 1 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className="mt-4 w-full rounded-[1.25rem] bg-[#1f1f1f] py-3.5 text-base font-semibold text-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
@@ -458,8 +459,8 @@ const Home = () => {
                 onClick={handleUploadAction}
               >
                 {uploadButtonLabel}
-              </motion.button>
-            </motion.div>
+              </Motion.button>
+            </Motion.div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:gap-5">
               <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-5">
@@ -471,8 +472,8 @@ const Home = () => {
                 <p className="mt-3 text-lg font-semibold text-[#1f1f1f] xl:text-xl">Markdown, PDF, Notion</p>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </Motion.div>
+        </Motion.div>
       </div>
     </section>
   );

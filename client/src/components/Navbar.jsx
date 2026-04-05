@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
@@ -73,7 +73,7 @@ const Navbar = () => {
       </div>
 
       {isOpen && (
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
@@ -96,7 +96,7 @@ const Navbar = () => {
               </NavLink>
             ))}
           </div>
-        </motion.div>
+        </Motion.div>
       )}
     </nav>
   );

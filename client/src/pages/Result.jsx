@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
@@ -99,6 +99,40 @@ const renderHighlightedText = (text, terms) => {
   });
 };
 
+const SectionIcon = ({ type }) => {
+  if (type === "summary") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
+        <path d="M7 5.5h10" strokeLinecap="round" />
+        <path d="M7 10h10" strokeLinecap="round" />
+        <path d="M7 14.5h6.5" strokeLinecap="round" />
+        <rect x="4.5" y="3.5" width="15" height="17" rx="3" />
+      </svg>
+    );
+  }
+
+  if (type === "highlights") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
+        <path d="m12 3.8 1.9 4 4.4.6-3.2 3 0.8 4.4-3.9-2.1-3.9 2.1 0.8-4.4-3.2-3 4.4-.6L12 3.8Z" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
+      <path d="M8 6.5h8" strokeLinecap="round" />
+      <path d="M8 11.5h8" strokeLinecap="round" />
+      <path d="M8 16.5h5" strokeLinecap="round" />
+      <rect x="5" y="4" width="14" height="16" rx="2.5" />
+    </svg>
+  );
+};
+
+const SkeletonBlock = ({ className }) => (
+  <div className={`animate-pulse rounded-2xl bg-black/6 ${className}`} />
+);
+
 const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -114,6 +148,23 @@ const Result = () => {
     const timer = window.setTimeout(() => setIsHydrated(true), 220);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const container = transcriptScrollRef.current;
+    if (!container || !resultData?.result) return;
+
+    const updateFade = () => {
+      const canScrollFurther = container.scrollTop + container.clientHeight < container.scrollHeight - 4;
+      setShowTranscriptFade(canScrollFurther);
+    };
+
+    updateFade();
+    container.addEventListener("scroll", updateFade);
+
+    return () => {
+      container.removeEventListener("scroll", updateFade);
+    };
+  }, [showFullTranscript, isHydrated, resultData, transcriptSearch]);
 
   if (!resultData?.result) {
     return <Navigate to="/" replace />;
@@ -140,23 +191,6 @@ const Result = () => {
     }
   };
 
-  useEffect(() => {
-    const container = transcriptScrollRef.current;
-    if (!container) return;
-
-    const updateFade = () => {
-      const canScrollFurther = container.scrollTop + container.clientHeight < container.scrollHeight - 4;
-      setShowTranscriptFade(canScrollFurther);
-    };
-
-    updateFade();
-    container.addEventListener("scroll", updateFade);
-
-    return () => {
-      container.removeEventListener("scroll", updateFade);
-    };
-  }, [showFullTranscript, isHydrated, transcriptPreview]);
-
   const handleDownloadText = () => {
     const content = [
       `File: ${fileName || "Meeting upload"}`,
@@ -181,46 +215,12 @@ const Result = () => {
     URL.revokeObjectURL(url);
   };
 
-  const SectionIcon = ({ type }) => {
-    if (type === "summary") {
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-          <path d="M7 5.5h10" strokeLinecap="round" />
-          <path d="M7 10h10" strokeLinecap="round" />
-          <path d="M7 14.5h6.5" strokeLinecap="round" />
-          <rect x="4.5" y="3.5" width="15" height="17" rx="3" />
-        </svg>
-      );
-    }
-
-    if (type === "highlights") {
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-          <path d="m12 3.8 1.9 4 4.4.6-3.2 3 0.8 4.4-3.9-2.1-3.9 2.1 0.8-4.4-3.2-3 4.4-.6L12 3.8Z" strokeLinejoin="round" />
-        </svg>
-      );
-    }
-
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-        <path d="M8 6.5h8" strokeLinecap="round" />
-        <path d="M8 11.5h8" strokeLinecap="round" />
-        <path d="M8 16.5h5" strokeLinecap="round" />
-        <rect x="5" y="4" width="14" height="16" rx="2.5" />
-      </svg>
-    );
-  };
-
-  const SkeletonBlock = ({ className }) => (
-    <div className={`animate-pulse rounded-2xl bg-black/6 ${className}`} />
-  );
-
   return (
     <section className="relative overflow-hidden px-5 py-10 sm:px-8 lg:px-10 lg:py-14 xl:px-12 xl:py-18 2xl:px-16">
       <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col gap-5 rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:p-8"
@@ -260,10 +260,10 @@ const Result = () => {
               Upload another file
             </button>
           </div>
-        </motion.div>
+        </Motion.div>
 
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
@@ -313,7 +313,7 @@ const Result = () => {
                 </>
               ) : (
                 summarySections.map((section, index) => (
-                  <motion.div
+                  <Motion.div
                     key={`${section.title}-${index}`}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -341,13 +341,13 @@ const Result = () => {
                         )}
                       </div>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 ))
               )}
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.14 }}
@@ -374,7 +374,7 @@ const Result = () => {
                 </>
               ) : highlights.length > 0 ? (
                 highlights.map((highlight, index) => (
-                  <motion.div
+                  <Motion.div
                     key={`${highlight.text}-${index}`}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -385,7 +385,7 @@ const Result = () => {
                       <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1f1f1f]" />
                       <p>{highlight.text}</p>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 ))
               ) : (
                 <div className="rounded-2xl border border-black/8 bg-[#fafafa] px-4 py-3 text-sm leading-6 text-[#5f5f5f]">
@@ -393,10 +393,10 @@ const Result = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </Motion.div>
         </div>
 
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -437,7 +437,7 @@ const Result = () => {
           </div>
 
           <AnimatePresence initial={false}>
-            <motion.div
+            <Motion.div
               key={showFullTranscript ? "expanded" : "collapsed"}
               initial={{ opacity: 0, height: 120 }}
               animate={{ opacity: 1, height: showFullTranscript ? "auto" : 190 }}
@@ -471,9 +471,9 @@ const Result = () => {
               {showTranscriptFade && (
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#fafafa] to-transparent" />
               )}
-            </motion.div>
+            </Motion.div>
           </AnimatePresence>
-        </motion.div>
+        </Motion.div>
       </div>
     </section>
   );

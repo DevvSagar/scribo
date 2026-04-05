@@ -7,7 +7,6 @@ import fs from "fs";
 import path from "path";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import mongoSanitize from "express-mongo-sanitize";
 import net from "net";
 import dns from "dns/promises";
 import { fileURLToPath } from "url";
@@ -110,6 +109,36 @@ const logInfo = (message) => {
 
 const logError = (message, metadata = {}) => {
   console.error(`[server] ${message}`, metadata);
+};
+
+const sanitizeObject = (value) => {
+  if (!value || typeof value !== "object") return;
+
+  if (Array.isArray(value)) {
+    value.forEach(sanitizeObject);
+    return;
+  }
+
+  for (const key of Object.keys(value)) {
+    const shouldRemove = key.startsWith("$") || key.includes(".");
+    if (shouldRemove) {
+      delete value[key];
+      continue;
+    }
+
+    sanitizeObject(value[key]);
+  }
+};
+
+const sanitizeRequest = (req, _res, next) => {
+  // Express 5 exposes req.query as a getter-only property, so sanitize in place.
+  for (const key of ["body", "params", "query"]) {
+    if (req[key] && typeof req[key] === "object") {
+      sanitizeObject(req[key]);
+    }
+  }
+
+  next();
 };
 
 const assemblyClient = axios.create({
@@ -238,7 +267,7 @@ app.use(
 
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "100kb" }));
-app.use(mongoSanitize());
+app.use(sanitizeRequest);
 app.use("/api", apiLimiter);
 app.use("/upload", uploadLimiter);
 

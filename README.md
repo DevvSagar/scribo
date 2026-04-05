@@ -86,10 +86,10 @@ cd server && npm install
 ### 3. Run the app
 
 Backend:
-node index.js
+cd server && npm run dev
 
 Frontend:
-npm run dev
+cd client && npm run dev
 
 ---
 
@@ -97,9 +97,13 @@ npm run dev
 
 Create a `.env` file inside `/server`:
 
-ASSEMBLY_API_KEY=your_api_key
+ASSEMBLY_API_KEY=your_real_assemblyai_api_key
 FRONTEND_URL=http://localhost:5173
 PORT=5001
+
+Create a `.env` file inside `/client`:
+
+VITE_API_URL=http://localhost:5001
 
 ---
 

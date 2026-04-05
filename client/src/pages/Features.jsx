@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const features = [
   {
@@ -19,7 +19,7 @@ const Features = () => {
   return (
     <section className="px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-2xl"
@@ -31,11 +31,11 @@ const Features = () => {
           <p className="mt-5 text-lg leading-8 text-[#5f5f5f]">
             Everything your team needs to turn raw conversations into clear, actionable notes.
           </p>
-        </motion.div>
+        </Motion.div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {features.map((feature, index) => (
-            <motion.div
+            <Motion.div
               key={feature.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ const Features = () => {
               </div>
               <h2 className="mt-5 text-2xl font-semibold text-[#1f1f1f]">{feature.title}</h2>
               <p className="mt-3 leading-7 text-[#5f5f5f]">{feature.description}</p>
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
       </div>
