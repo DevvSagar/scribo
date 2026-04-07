@@ -1,4 +1,15 @@
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clipboard,
+  Download,
+  FileText,
+  ListChecks,
+  ScanSearch,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
@@ -16,9 +27,9 @@ const buildSummarySections = (summary) => {
 
   if (items.length === 0) {
     return [
-      { title: "Main Idea", icon: "🧠", items: ["No structured summary was returned for this file."] },
-      { title: "Key Takeaways", icon: "📌", items: [] },
-      { title: "Action Points", icon: "⚡", items: [] },
+      { title: "Main Idea", icon: "summary", items: ["No structured summary was returned for this file."] },
+      { title: "Key Takeaways", icon: "takeaways", items: [] },
+      { title: "Action Points", icon: "actions", items: [] },
     ];
   }
 
@@ -29,9 +40,9 @@ const buildSummarySections = (summary) => {
     .map((item) => (item.toLowerCase().startsWith("use ") || item.toLowerCase().startsWith("limit ") || item.toLowerCase().startsWith("practice ") ? item : `Follow up on: ${item}`));
 
   return [
-    { title: "Main Idea", icon: "🧠", items: mainIdea },
-    { title: "Key Takeaways", icon: "📌", items: takeaways },
-    { title: "Action Points", icon: "⚡", items: actionPoints },
+    { title: "Main Idea", icon: "summary", items: mainIdea },
+    { title: "Key Takeaways", icon: "takeaways", items: takeaways },
+    { title: "Action Points", icon: "actions", items: actionPoints },
   ];
 };
 
@@ -100,38 +111,30 @@ const renderHighlightedText = (text, terms) => {
 };
 
 const SectionIcon = ({ type }) => {
+  const iconProps = { className: "h-5 w-5", strokeWidth: 1.8 };
+
   if (type === "summary") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-        <path d="M7 5.5h10" strokeLinecap="round" />
-        <path d="M7 10h10" strokeLinecap="round" />
-        <path d="M7 14.5h6.5" strokeLinecap="round" />
-        <rect x="4.5" y="3.5" width="15" height="17" rx="3" />
-      </svg>
-    );
+    return <FileText {...iconProps} />;
   }
 
   if (type === "highlights") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-        <path d="m12 3.8 1.9 4 4.4.6-3.2 3 0.8 4.4-3.9-2.1-3.9 2.1 0.8-4.4-3.2-3 4.4-.6L12 3.8Z" strokeLinejoin="round" />
-      </svg>
-    );
+    return <Sparkles {...iconProps} />;
   }
 
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-      <path d="M8 6.5h8" strokeLinecap="round" />
-      <path d="M8 11.5h8" strokeLinecap="round" />
-      <path d="M8 16.5h5" strokeLinecap="round" />
-      <rect x="5" y="4" width="14" height="16" rx="2.5" />
-    </svg>
-  );
+  return <ScanSearch {...iconProps} />;
 };
 
 const SkeletonBlock = ({ className }) => (
   <div className={`animate-pulse rounded-2xl bg-black/6 ${className}`} />
 );
+
+const SummaryCardIcon = ({ type }) => {
+  const iconProps = { className: "h-5 w-5", strokeWidth: 1.8 };
+
+  if (type === "summary") return <FileText {...iconProps} />;
+  if (type === "takeaways") return <Sparkles {...iconProps} />;
+  return <ListChecks {...iconProps} />;
+};
 
 const Result = () => {
   const location = useLocation();
@@ -167,7 +170,7 @@ const Result = () => {
   }, [showFullTranscript, isHydrated, resultData, transcriptSearch]);
 
   if (!resultData?.result) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   const { result, fileName } = resultData;
@@ -223,19 +226,19 @@ const Result = () => {
         <Motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-5 rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:p-8"
+          className="flex flex-col gap-5 rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_22px_55px_rgba(0,0,0,0.05)] sm:p-8"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-[#7a7a7a]">Result</p>
-              <p className="mt-3 text-sm font-medium text-[#3f3f3f]">
-                This summary was generated using AI from your uploaded audio.
-              </p>
-              <h1 className="mt-3 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl">
-                AI Analysis Complete
+              <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fafafa] px-4 py-2 text-[0.72rem] font-medium uppercase tracking-[0.26em] text-[#666666]">
+                <CheckCircle2 className="h-4 w-4" strokeWidth={1.8} />
+                Result Workspace
+              </div>
+              <h1 className="mt-5 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl lg:text-[3.15rem]">
+                Your meeting output is ready to review.
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f5f5f] sm:text-base">
-                Your meeting has been processed successfully. Review your AI summary, highlights, and transcript for{" "}
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-[#5f5f5f] sm:text-base">
+                The workspace has finished processing your upload. Review the AI summary, highlights, and transcript for{" "}
                 <span className="font-medium text-[#1f1f1f]">{fileName || "your upload"}</span>.
               </p>
 
@@ -254,9 +257,10 @@ const Result = () => {
 
             <button
               type="button"
-              onClick={() => navigate("/")}
-              className="rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
+              onClick={() => navigate("/app")}
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
             >
+              <ArrowLeft className="h-4 w-4" strokeWidth={2} />
               Upload another file
             </button>
           </div>
@@ -290,15 +294,17 @@ const Result = () => {
                 <button
                   type="button"
                   onClick={handleCopySummary}
-                  className="rounded-full bg-[#1f1f1f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:bg-black"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1f1f1f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:bg-black"
                 >
+                  <Clipboard className="h-4 w-4" strokeWidth={2} />
                   {copyLabel}
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadText}
-                  className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]"
                 >
+                  <Download className="h-4 w-4" strokeWidth={2} />
                   Download as text
                 </button>
               </div>
@@ -321,8 +327,8 @@ const Result = () => {
                     className="rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-6 transition-shadow duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.05)] sm:p-7"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f0f0f0] text-lg">
-                        {section.icon}
+                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/8 bg-white text-[#1f1f1f]">
+                        <SummaryCardIcon type={section.icon} />
                       </div>
                       <div className="min-w-0">
                         <p className="text-lg font-semibold text-[#1f1f1f]">{section.title}</p>
@@ -355,7 +361,7 @@ const Result = () => {
             className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_22px_55px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_26px_65px_rgba(0,0,0,0.08)] sm:p-8"
           >
             <div className="flex items-center gap-3 text-[#1f1f1f]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f2f2f2]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-black/8 bg-[#fafafa]">
                 <SectionIcon type="highlights" />
               </div>
               <p className="text-sm uppercase tracking-[0.22em]">Important Points</p>
@@ -382,7 +388,9 @@ const Result = () => {
                     className="rounded-[1.4rem] border border-black/8 bg-[#fafafa] px-4 py-4 text-sm leading-6 text-[#3f3f3f] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(0,0,0,0.05)]"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1f1f1f]" />
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#1f1f1f]">
+                        <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+                      </div>
                       <p>{highlight.text}</p>
                     </div>
                   </Motion.div>
@@ -406,7 +414,7 @@ const Result = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3 text-[#1f1f1f]">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f2f2f2]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-black/8 bg-[#fafafa]">
                   <SectionIcon type="transcript" />
                 </div>
                 <p className="text-sm uppercase tracking-[0.22em]">Transcript</p>
@@ -427,13 +435,19 @@ const Result = () => {
           </div>
 
           <div className="mt-6">
-            <input
-              type="text"
-              value={transcriptSearch}
-              onChange={(event) => setTranscriptSearch(event.target.value)}
-              placeholder="Search in transcript..."
-              className="w-full rounded-[1.25rem] border border-black/10 bg-[#fafafa] px-4 py-3 text-sm text-[#1f1f1f] outline-none placeholder:text-[#9d9d9d] focus:border-black/20"
-            />
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b8b8b]"
+                strokeWidth={1.8}
+              />
+              <input
+                type="text"
+                value={transcriptSearch}
+                onChange={(event) => setTranscriptSearch(event.target.value)}
+                placeholder="Search in transcript..."
+                className="w-full rounded-[1.25rem] border border-black/10 bg-[#fafafa] py-3 pl-11 pr-4 text-sm text-[#1f1f1f] outline-none placeholder:text-[#9d9d9d] focus:border-black/20"
+              />
+            </div>
           </div>
 
           <AnimatePresence initial={false}>

@@ -1,12 +1,12 @@
 import { motion as Motion } from "framer-motion";
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
   { to: "/features", label: "Features" },
   { to: "/contact", label: "Contact" },
+  { to: "/privacy-policy", label: "Privacy" },
 ];
 
 const Navbar = () => {
@@ -14,62 +14,74 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-black/8 bg-white/90 backdrop-blur-xl">
-      <div className="grid w-full grid-cols-[auto_1fr] items-center gap-6 px-5 py-4 sm:px-8 lg:px-10 xl:px-12 2xl:px-16">
-        <div className="flex items-center gap-4 xl:gap-5">
-          <img
-            src="/scribo-logo.png"
-            alt="Scribo logo"
-            className="h-12 w-12 rounded-2xl object-cover object-top ring-1 ring-black/8 xl:h-14 xl:w-14"
-          />
-          <div>
-            <p className="text-lg font-semibold tracking-wide text-[#1f1f1f] xl:text-xl">
+      <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10 xl:px-12 2xl:px-16">
+        <div className="relative flex items-center justify-between gap-6 py-4">
+          <Link to="/" className="flex shrink-0 items-center gap-3">
+            <img
+              src="/scribo-logo.png"
+              alt="Scribo logo"
+              className="h-11 w-11 rounded-2xl object-cover object-top ring-1 ring-black/8 xl:h-12 xl:w-12"
+            />
+            <p className="text-lg font-semibold tracking-wide text-[#1f1f1f] xl:text-[1.1rem]">
               Scribo
             </p>
-            <p className="text-[0.65rem] uppercase tracking-[0.32em] text-[#7a7a7a] xl:text-[0.72rem]">
-              AI meeting notes
-            </p>
-          </div>
-        </div>
+          </Link>
 
-        <div className="hidden items-center justify-self-end md:flex">
-          <div className="flex items-center gap-7 lg:gap-8 xl:gap-10">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className="group relative text-sm font-medium tracking-wide xl:text-[0.95rem]"
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={[
-                        "transition-all duration-300",
-                        isActive ? "text-[#1f1f1f]" : "text-[#666666] group-hover:text-[#1f1f1f] group-hover:-translate-y-0.5",
-                      ].join(" ")}
-                    >
-                      {link.label}
-                    </span>
-                    <span
-                      className={[
-                        "absolute -bottom-2 left-0 h-0.5 rounded-full bg-[#1f1f1f] transition-all duration-300",
-                        isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
-                      ].join(" ")}
-                    />
-                  </>
-                )}
-              </NavLink>
-            ))}
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center lg:flex">
+            <div className="flex items-center gap-7 xl:gap-9">
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className="group relative text-sm font-medium tracking-wide xl:text-[0.95rem]"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={[
+                          "transition-all duration-300",
+                          isActive ? "text-[#1f1f1f]" : "text-[#666666] group-hover:text-[#1f1f1f]",
+                        ].join(" ")}
+                      >
+                        {link.label}
+                      </span>
+                      <span
+                        className={[
+                          "absolute -bottom-2 left-0 h-0.5 rounded-full bg-[#1f1f1f] transition-all duration-300",
+                          isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
+                        ].join(" ")}
+                      />
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <button
-          type="button"
-          aria-label="Toggle navigation"
-          className="inline-flex justify-self-end rounded-xl border border-black/10 bg-[#fafafa] p-3 text-[#1f1f1f] md:hidden"
-          onClick={() => setIsOpen((open) => !open)}
-        >
-          <span className="text-lg leading-none">{isOpen ? "✕" : "☰"}</span>
-        </button>
+          <div className="hidden shrink-0 items-center gap-2.5 md:flex">
+            <NavLink
+              to="/sign-in"
+              className="inline-flex items-center rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/18 hover:bg-[#fafafa]"
+            >
+              Sign in
+            </NavLink>
+            <NavLink
+              to="/get-a-demo"
+              className="inline-flex items-center rounded-xl bg-[#1f1f1f] px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-black"
+            >
+              Get a demo
+            </NavLink>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Toggle navigation"
+            className="inline-flex rounded-xl border border-black/10 bg-[#fafafa] p-3 text-[#1f1f1f] md:hidden"
+            onClick={() => setIsOpen((open) => !open)}
+          >
+            <span className="text-lg leading-none">{isOpen ? "✕" : "☰"}</span>
+          </button>
+        </div>
       </div>
 
       {isOpen && (
@@ -95,6 +107,21 @@ const Navbar = () => {
                 {link.label}
               </NavLink>
             ))}
+
+            <NavLink
+              to="/sign-in"
+              className="inline-flex items-center justify-center rounded-xl border border-black/10 bg-white px-5 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:bg-[#fafafa]"
+              onClick={() => setIsOpen(false)}
+            >
+              Sign in
+            </NavLink>
+            <NavLink
+              to="/get-a-demo"
+              className="inline-flex items-center justify-center rounded-xl bg-[#1f1f1f] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-black"
+              onClick={() => setIsOpen(false)}
+            >
+              Get a demo
+            </NavLink>
           </div>
         </Motion.div>
       )}

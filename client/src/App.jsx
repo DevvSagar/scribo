@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./layout/Layout";
 import Home from "./pages/Home";
-import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Result from "./pages/Result";
-import Features from "./pages/Features";
+import Upload from "./pages/Upload";
+import PolicyPage from "./pages/PolicyPage";
+import UnderDevelopmentPage from "./pages/UnderDevelopmentPage";
 
 function App() {
   return (
@@ -12,11 +13,24 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/app" element={<Upload />} />
           <Route path="/result" element={<Result />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/services" element={<Navigate to="/features" replace />} />
+          <Route path="/about" element={<Navigate to="/" replace />} />
+          <Route
+            path="/features"
+            element={<UnderDevelopmentPage badge="Features" title="Features page is under development." />}
+          />
+          <Route path="/services" element={<Navigate to="/" replace />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy-policy" element={<PolicyPage />} />
+          <Route
+            path="/sign-in"
+            element={<UnderDevelopmentPage badge="Sign In" title="Sign in is under development." />}
+          />
+          <Route
+            path="/get-a-demo"
+            element={<UnderDevelopmentPage badge="Get A Demo" title="Get a demo is under development." />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

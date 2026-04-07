@@ -1,481 +1,306 @@
 import { motion as Motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  AudioWaveform,
+  BriefcaseBusiness,
+  Clock3,
+  FileText,
+  Layers3,
+  ListChecks,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  UploadCloud,
+  Users,
+  WandSparkles,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const stats = [
+const productHighlights = [
   {
-    value: "2 min",
-    label: "Average summary time",
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 7.8v4.7l3 1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    title: "Readable AI summaries",
+    description: "Turn long recordings into clean, structured notes that teams can actually scan.",
+    icon: FileText,
   },
   {
-    value: "98%",
-    label: "Key point coverage",
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-        <path d="M12 3.8l6.6 2.4v5.2c0 4.2-2.6 7.9-6.6 8.8c-4-1-6.6-4.6-6.6-8.8V6.2L12 3.8Z" strokeLinejoin="round" />
-        <path d="m9.4 12.2l1.7 1.7l3.6-3.9" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    title: "Action items extracted",
+    description: "Capture follow-ups, owners, and next steps without digging back through the call.",
+    icon: ListChecks,
   },
   {
-    value: "24/7",
-    label: "Upload availability",
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
-        <path d="M7.5 17.2h8.8a3.4 3.4 0 0 0 .6-6.7A5.4 5.4 0 0 0 6.5 9.1a3.2 3.2 0 0 0 1 6.1Z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    title: "Searchable meeting context",
+    description: "Keep transcripts, highlights, and outcomes in one focused workflow.",
+    icon: Search,
   },
 ];
 
-const LARGE_FILE_SIZE = 25 * 1024 * 1024;
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-const ALLOWED_FILE_TYPES = /\.(mp3|wav|m4a|mp4)$/i;
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Upload your recording",
+    description: "Drop an MP3, WAV, M4A, or MP4 file into the dedicated workspace.",
+    icon: UploadCloud,
+  },
+  {
+    step: "02",
+    title: "Let Scribo process the meeting",
+    description: "AI transcribes, organizes, and summarizes the conversation in the background.",
+    icon: AudioWaveform,
+  },
+  {
+    step: "03",
+    title: "Review clear outputs",
+    description: "Get a polished summary, highlights, and transcript ready to share or export.",
+    icon: WandSparkles,
+  },
+];
+
+const useCases = [
+  {
+    title: "Founder updates",
+    description: "Capture product decisions, hiring notes, and follow-ups after fast-moving calls.",
+    icon: BriefcaseBusiness,
+  },
+  {
+    title: "Client meetings",
+    description: "Turn discussions into presentable notes and action items without manual admin work.",
+    icon: Users,
+  },
+  {
+    title: "Ops and internal reviews",
+    description: "Keep recurring meetings searchable, structured, and easy to revisit later.",
+    icon: Layers3,
+  },
+];
+
+const metrics = [
+  { label: "Faster follow-up", value: "Minutes", icon: Clock3 },
+  { label: "Clear deliverables", value: "AI Notes", icon: Sparkles },
+  { label: "Reliable handoff", value: "Team Ready", icon: ShieldCheck },
+];
+
+const sectionIntroTransition = { duration: 0.42, ease: [0.22, 1, 0.36, 1] };
+const cardHover = { y: -4, transition: { duration: 0.2, ease: "easeOut" } };
 
 const Home = () => {
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
-  const [uploadPhase, setUploadPhase] = useState("idle");
-  const [progress, setProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loadingStage, setLoadingStage] = useState("");
-
-  const uploadStatus = !file
-    ? {
-        label: "Waiting",
-        className: "bg-[#f1f1f1] text-[#5f5f5f]",
-      }
-    : uploadPhase === "processing"
-      ? {
-          label: loadingStage || "Processing",
-          className: "bg-[#1f1f1f] text-white",
-        }
-      : uploadPhase === "done"
-        ? {
-            label: "Ready",
-            className: "bg-[#1f1f1f] text-white",
-          }
-        : file.size > LARGE_FILE_SIZE
-          ? {
-              label: "Large file",
-              className: "bg-[#ebebeb] text-[#4f4f4f]",
-            }
-          : {
-              label: "Selected",
-              className: "bg-[#1f1f1f] text-white",
-            };
-
-  const uploadButtonLabel =
-    uploadPhase === "processing"
-      ? "Processing..."
-      : uploadPhase === "done"
-        ? "View Results"
-      : "Upload & Summarize";
-
-  const resetUploadState = () => {
-    setFile(null);
-    setUploadPhase("idle");
-    setProgress(0);
-    setIsDragging(false);
-    setErrorMessage("");
-    setLoadingStage("");
-  };
-
-  const applyNewFile = (nextFile) => {
-    if (!nextFile) {
-      resetUploadState();
-      return;
-    }
-
-    if (!ALLOWED_FILE_TYPES.test(nextFile.name)) {
-      setFile(null);
-      setUploadPhase("idle");
-      setProgress(0);
-      setIsDragging(false);
-      setLoadingStage("");
-      setErrorMessage("Something went wrong, try again with an MP3, WAV, M4A, or MP4 file.");
-      return;
-    }
-
-    setFile(nextFile);
-    setUploadPhase("idle");
-    setProgress(0);
-    setIsDragging(false);
-    setErrorMessage("");
-    setLoadingStage("");
-  };
-
-  const handleFileChange = (event) => {
-    const nextFile = event.target.files?.[0] ?? null;
-    applyNewFile(nextFile);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (event) => {
-    event.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    const nextFile = event.dataTransfer.files?.[0] ?? null;
-    applyNewFile(nextFile);
-  };
-
-  const handleUploadAction = async () => {
-    if (!file || uploadPhase === "processing") return;
-
-    if (!API_BASE_URL) {
-      setErrorMessage("App configuration error. Missing API URL.");
-      return;
-    }
-
-    if (uploadPhase === "done") {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setUploadPhase("processing");
-    setProgress(10);
-    setErrorMessage("");
-    setLoadingStage("Uploading file...");
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Upload failed.");
-      }
-
-      setProgress(100);
-      setUploadPhase("done");
-      setLoadingStage("View Results");
-
-      const payload = {
-        result: data,
-        fileName: file.name,
-      };
-
-      window.setTimeout(() => {
-        resetUploadState();
-        navigate("/result", { state: payload });
-      }, 350);
-    } catch {
-      setUploadPhase("idle");
-      setProgress(0);
-      setLoadingStage("");
-      setErrorMessage("Something went wrong, try again.");
-    }
-  };
-
-  useEffect(() => {
-    if (!file) return undefined;
-
-    const handleBeforeUnload = (event) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [file]);
-
-  useEffect(() => {
-    if (uploadPhase !== "processing") return undefined;
-
-    const interval = window.setInterval(() => {
-      setProgress((current) => {
-        if (current >= 92) return current;
-        return current + 6;
-      });
-    }, 280);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [uploadPhase]);
-
-  useEffect(() => {
-    if (uploadPhase !== "processing") return;
-
-    if (progress < 30) {
-      setLoadingStage("Uploading file...");
-      return;
-    }
-
-    if (progress < 72) {
-      setLoadingStage("Transcribing audio...");
-      return;
-    }
-
-    setLoadingStage("Generating summary...");
-  }, [progress, uploadPhase]);
 
   return (
-    <section className="relative overflow-hidden px-5 py-10 sm:px-8 lg:px-10 lg:py-12 xl:px-12 xl:py-16 2xl:px-16">
-      <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.06),transparent_58%)]" />
+      <div className="absolute left-1/2 top-0 -z-10 h-[28rem] w-[60rem] -translate-x-1/2 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0))]" />
 
-      <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 items-start gap-10 md:gap-12 lg:grid-cols-12 xl:gap-14 2xl:gap-16">
-        <Motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="col-span-1 flex min-w-0 flex-col items-center pt-2 text-center lg:col-span-6 lg:items-start lg:pt-3 lg:text-left xl:col-span-7 xl:pt-4"
-        >
+      <section className="px-5 pb-14 pt-12 sm:px-8 lg:px-10 lg:pb-18 lg:pt-16 xl:px-12 2xl:px-16">
+        <div className="mx-auto w-full max-w-[1440px]">
           <Motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="flex w-full max-w-3xl flex-col items-center lg:max-w-none lg:items-start"
-          >
-            <span className="inline-flex min-h-14 items-center rounded-full border border-black/8 bg-[#fafafa] px-6 py-3 text-base font-medium text-[#1f1f1f] shadow-[0_12px_30px_rgba(0,0,0,0.04)] sm:text-lg">
-              Built for teams, founders, and client calls
-            </span>
-          </Motion.div>
-
-          <Motion.h1
-            className="mt-5 max-w-4xl text-[2.9rem] font-bold leading-[0.96] text-[#1f1f1f] sm:text-[3.7rem] lg:mt-6 lg:max-w-none lg:text-[4.15rem] xl:text-[4.75rem] 2xl:text-[5.2rem]"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.7 }}
-          >
-            Turn meeting recordings into
-            <span className="block text-[#4f4f4f]">
-              smart notes and action items
-            </span>
-          </Motion.h1>
-
-          <Motion.p
-            className="mt-4 max-w-2xl text-base leading-7 text-[#5f5f5f] lg:max-w-[38rem] xl:text-[1.05rem]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.7 }}
-          >
-            Upload your audio, extract key decisions, and deliver polished summaries
-            your team can scan in seconds.
-          </Motion.p>
-
-          <Motion.div
-            className="mt-6 flex w-full max-w-2xl flex-col gap-4 sm:flex-row sm:justify-center lg:max-w-none lg:justify-start"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            <button className="rounded-full border border-black/10 bg-white px-8 py-3.5 text-base font-medium text-[#1f1f1f] transition duration-300 hover:border-black/20 hover:bg-[#f5f5f5]">
-              Watch demo
-            </button>
-          </Motion.div>
-
-          <div className="mt-7 grid w-full max-w-3xl gap-3.5 sm:grid-cols-3 lg:max-w-[44rem] xl:gap-4">
-            {stats.map((stat, index) => (
-              <Motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 + index * 0.1, duration: 0.6 }}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className="rounded-[1.4rem] border border-black/8 bg-[#fafafa] p-4 transition-shadow duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(0,0,0,0.06)] xl:p-5"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f0f0f0] text-[#1f1f1f]">
-                  {stat.icon}
-                </div>
-                <p className="text-[1.9rem] font-semibold text-[#1f1f1f] xl:text-[2.2rem]">
-                  {stat.value}
-                </p>
-                <p className="mt-1.5 text-sm leading-5 text-[#5f5f5f]">{stat.label}</p>
-              </Motion.div>
-            ))}
-          </div>
-        </Motion.div>
-
-        <Motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7 }}
-          className="relative col-span-1 mx-auto flex w-full max-w-[620px] justify-center lg:col-span-6 lg:mx-0 lg:w-full lg:max-w-none lg:justify-self-center xl:col-span-5 xl:max-w-[680px]"
-        >
-          <Motion.div
-            className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-black/4 blur-3xl"
-            animate={{
-              opacity: isDragging ? 0.45 : [0.22, 0.34, 0.22],
-              scale: isDragging ? 1.03 : [1, 1.04, 1],
-            }}
-            transition={{
-              duration: isDragging ? 0.25 : 4.2,
-              repeat: isDragging ? 0 : Infinity,
-              ease: "easeInOut",
-            }}
-          />
-
-          <Motion.div
-            animate={
-              isDragging
-                ? {
-                    y: -6,
-                    borderColor: "rgba(31, 31, 31, 0.18)",
-                    boxShadow: "0 18px 50px rgba(0, 0, 0, 0.08)",
-                  }
-                : file
-                  ? { y: [0, -4, 0] }
-                  : { y: 0 }
-            }
-            transition={{ duration: 0.45, ease: "easeOut" }}
-            whileHover={{
-              y: -4,
-              boxShadow: "0 20px 55px rgba(0, 0, 0, 0.3)",
-              borderColor: "rgba(31, 31, 31, 0.12)",
-            }}
-            className="flex w-full max-w-[640px] flex-col rounded-[2.2rem] border border-black/8 bg-white p-5 shadow-[0_24px_60px_rgba(0,0,0,0.07)] sm:p-6 xl:p-7"
+            className="mx-auto flex max-w-5xl flex-col items-center text-center"
           >
             <Motion.div
-              animate={
-                file
-                  ? {
-                      borderColor: "rgba(31, 31, 31, 0.14)",
-                      boxShadow: "0 0 0 1px rgba(31, 31, 31, 0.04)",
-                    }
-                  : {
-                      borderColor: "rgba(0, 0, 0, 0.08)",
-                      boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
-                    }
-              }
-              transition={{ duration: 0.3 }}
-              className="flex min-h-[82px] items-center justify-between gap-4 rounded-[1.5rem] border border-black/8 bg-[#fafafa] px-5 py-3 xl:px-6"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.04, ...sectionIntroTransition }}
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-[0.7rem] font-medium uppercase tracking-[0.26em] text-[#666666] shadow-[0_12px_30px_rgba(0,0,0,0.04)] backdrop-blur-sm"
             >
-              <div>
-                <p className="text-sm text-[#7a7a7a] xl:text-base">Current upload</p>
-                <p className="text-base font-medium text-[#1f1f1f] xl:text-xl">
-                  {file ? file.name : "No file selected"}
-                </p>
-              </div>
-              <span className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium xl:text-sm ${uploadStatus.className}`}>
-                {uploadStatus.label}
-              </span>
+              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+              AI meeting intelligence
             </Motion.div>
 
-            <Motion.div
-              animate={
-                isDragging
-                  ? {
-                      borderColor: "rgba(31, 31, 31, 0.2)",
-                      backgroundColor: "rgba(0, 0, 0, 0.02)",
-                    }
-                  : file
-                  ? {
-                      borderColor: "rgba(31, 31, 31, 0.14)",
-                      backgroundColor: "rgba(0, 0, 0, 0.015)",
-                    }
-                  : {
-                      borderColor: "rgba(31, 31, 31, 0.12)",
-                      backgroundColor: "rgba(0, 0, 0, 0.01)",
-                    }
-              }
-              transition={{ duration: 0.3 }}
-              className="mt-6 flex min-h-[300px] flex-col justify-center rounded-[1.8rem] border border-dashed border-black/12 bg-[#fafafa] p-5 text-center xl:min-h-[330px] xl:p-6"
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+            <Motion.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-6 max-w-5xl text-[3.1rem] font-semibold leading-[0.95] text-[#1f1f1f] sm:text-[4.1rem] lg:text-[5rem] xl:text-[5.5rem]"
             >
-              <Motion.div
-                animate={
-                  isDragging
-                    ? { scale: 1.12, rotate: -8 }
-                    : file
-                      ? { scale: [1, 1.08, 1], rotate: [0, -6, 0] }
-                      : { scale: 1, rotate: 0 }
-                }
-                transition={{ duration: 0.45, ease: "easeOut" }}
-                className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-[#f0f0f0] text-3xl text-[#1f1f1f] xl:h-18 xl:w-18"
-              >
-                ↑
-              </Motion.div>
+              Notes your team can trust right after the call.
+            </Motion.h1>
 
-              <p className="mt-4 text-xl font-semibold text-[#1f1f1f] xl:text-2xl">
-                {isDragging ? "Drop your file here" : "Drop audio or choose a file"}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[#5f5f5f] xl:text-base">
-                {isDragging
-                  ? "Release to attach your recording and start the flow."
-                  : "Supports MP3, WAV, M4A and long-form call recordings."}
-              </p>
+            <Motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.16, ...sectionIntroTransition }}
+              className="mt-6 max-w-3xl text-base leading-8 text-[#565656] sm:text-lg"
+            >
+              Scribo turns meeting recordings into structured summaries, action items, and searchable transcripts.
+              The homepage sells the workflow. The app gives you a focused place to actually use it.
+            </Motion.p>
 
-              <input
-                type="file"
-                className="mt-5 block w-full rounded-[1.25rem] border border-black/10 bg-white px-4 py-3.5 text-sm text-[#1f1f1f] file:mr-4 file:rounded-full file:border-0 file:bg-[#1f1f1f] file:px-5 file:py-2.5 file:font-medium file:text-white xl:text-base"
-                accept=".mp3,.wav,.m4a,.mp4,audio/*,video/mp4"
-                onChange={handleFileChange}
-              />
-
-              {(uploadPhase === "processing" || uploadPhase === "done") && (
-                <div className="mt-4">
-                  <div className="h-2 overflow-hidden rounded-full bg-black/8">
-                    <Motion.div
-                      className="h-full rounded-full bg-[#1f1f1f]"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                    />
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-[#5f5f5f]">
-                    <span>{uploadPhase === "done" ? "Summary ready to view" : loadingStage}</span>
-                    <span>{progress}%</span>
-                  </div>
-                </div>
-              )}
-
-              {errorMessage && (
-                <p className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                  {errorMessage}
-                </p>
-              )}
-
+            <Motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22, ...sectionIntroTransition }}
+              className="mt-8 flex flex-wrap justify-center gap-3"
+            >
               <Motion.button
-                animate={file ? { scale: [1, 1.02, 1] } : { scale: 1 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="mt-4 w-full rounded-[1.25rem] bg-[#1f1f1f] py-3.5 text-base font-semibold text-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
-                disabled={!file || uploadPhase === "processing"}
-                onClick={handleUploadAction}
+                type="button"
+                onClick={() => navigate("/app")}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.99 }}
+                className="inline-flex items-center gap-2 rounded-full bg-[#1f1f1f] px-6 py-3.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-black"
               >
-                {uploadButtonLabel}
+                Get Started
+                <ArrowRight className="h-4 w-4" strokeWidth={2} />
               </Motion.button>
             </Motion.div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:gap-5">
-              <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-5">
-                <p className="text-sm text-[#7a7a7a] xl:text-base">AI output</p>
-                <p className="mt-3 text-lg font-semibold text-[#1f1f1f] xl:text-xl">Summary, tasks, highlights</p>
-              </div>
-              <div className="flex min-h-[118px] flex-col justify-center rounded-[1.5rem] border border-black/8 bg-[#fafafa] p-5">
-                <p className="text-sm text-[#7a7a7a] xl:text-base">Export options</p>
-                <p className="mt-3 text-lg font-semibold text-[#1f1f1f] xl:text-xl">Markdown, PDF, Notion</p>
-              </div>
+            <div className="mt-10 grid w-full max-w-4xl gap-3 sm:grid-cols-3">
+              {metrics.map((metric, index) => {
+                const Icon = metric.icon;
+
+                return (
+                  <Motion.div
+                    key={metric.label}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 + index * 0.08 }}
+                    whileHover={cardHover}
+                    className="rounded-[1.5rem] border border-black/8 bg-white px-5 py-5 text-center shadow-[0_18px_42px_rgba(0,0,0,0.04)]"
+                  >
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5f5f5] text-[#1f1f1f]">
+                      <Icon className="h-5 w-5" strokeWidth={1.8} />
+                    </div>
+                    <p className="mt-4 text-[1.55rem] font-semibold text-[#1f1f1f]">{metric.value}</p>
+                    <p className="mt-1 text-sm text-[#5f5f5f]">{metric.label}</p>
+                  </Motion.div>
+                );
+              })}
             </div>
           </Motion.div>
+        </div>
+      </section>
+
+      <section id="features" className="px-5 py-14 sm:px-8 lg:px-10 lg:py-18 xl:px-12 2xl:px-16">
+        <div className="mx-auto max-w-[1440px]">
+          <Motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={sectionIntroTransition}
+            className="max-w-3xl"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7a7a7a]">Features</p>
+            <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl lg:text-[3rem]">
+              A cleaner workflow from recording to follow-up.
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[#5f5f5f]">
+              Everything is designed to feel lightweight, premium, and useful immediately after the meeting ends.
+            </p>
+          </Motion.div>
+
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {productHighlights.map((feature, index) => {
+              const Icon = feature.icon;
+
+              return (
+                <Motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: index * 0.06, duration: 0.45 }}
+                  whileHover={cardHover}
+                  className="rounded-[1.9rem] border border-black/8 bg-white p-6 shadow-[0_18px_45px_rgba(0,0,0,0.05)] transition-shadow duration-300 hover:shadow-[0_24px_55px_rgba(0,0,0,0.08)]"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/8 bg-[#fafafa] text-[#1f1f1f]">
+                    <Icon className="h-5 w-5" strokeWidth={1.8} />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-[#1f1f1f]">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#5f5f5f] sm:text-[0.98rem]">{feature.description}</p>
+                </Motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-14 sm:px-8 lg:px-10 lg:py-18 xl:px-12 2xl:px-16">
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={sectionIntroTransition}
+          className="mx-auto max-w-[1440px] rounded-[2.4rem] border border-black/8 bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)] px-6 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:px-8 sm:py-10 lg:px-10"
+        >
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7a7a7a]">How It Works</p>
+            <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl">
+              A simple three-step product flow.
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {workflowSteps.map((step, index) => {
+              const Icon = step.icon;
+
+              return (
+                <Motion.div
+                  key={step.step}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ delay: index * 0.06, duration: 0.45 }}
+                  whileHover={cardHover}
+                  className="rounded-[1.7rem] border border-black/8 bg-white p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold tracking-[0.2em] text-[#8a8a8a]">{step.step}</span>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f4f4f4] text-[#1f1f1f]">
+                      <Icon className="h-5 w-5" strokeWidth={1.8} />
+                    </div>
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-[#1f1f1f]">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#5f5f5f] sm:text-[0.98rem]">{step.description}</p>
+                </Motion.div>
+              );
+            })}
+          </div>
         </Motion.div>
-      </div>
-    </section>
+      </section>
+
+      <section className="px-5 py-14 sm:px-8 lg:px-10 lg:py-18 xl:px-12 2xl:px-16">
+        <div className="mx-auto max-w-[1440px]">
+          <Motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={sectionIntroTransition}
+            className="max-w-3xl"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7a7a7a]">Use Cases</p>
+            <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl lg:text-[3rem]">
+              Built for teams that need faster, clearer post-meeting output.
+            </h2>
+          </Motion.div>
+
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {useCases.map((item, index) => {
+              const Icon = item.icon;
+
+              return (
+                <Motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ delay: index * 0.06, duration: 0.45 }}
+                  whileHover={cardHover}
+                  className="rounded-[1.8rem] border border-black/8 bg-white p-6 shadow-[0_18px_45px_rgba(0,0,0,0.04)]"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/8 bg-[#fafafa] text-[#1f1f1f]">
+                    <Icon className="h-5 w-5" strokeWidth={1.8} />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-[#1f1f1f]">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#5f5f5f] sm:text-[0.98rem]">{item.description}</p>
+                </Motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+    </div>
   );
 };
 
