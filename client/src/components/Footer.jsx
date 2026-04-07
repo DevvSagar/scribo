@@ -23,7 +23,7 @@ const LinkedinIcon = () => (
 const socialLinks = [
   {
     label: "Instagram",
-    href: "https://www.instagram.com/devvsagar/",
+    href: "https://www.instagram.com/sagarssinghh?utm_source=qr",
     icon: InstagramIcon,
   },
   {
@@ -33,7 +33,7 @@ const socialLinks = [
   },
   {
     label: "LinkedIn",
-    href: "https://www.linkedin.com/in/devvsagar/",
+    href: "https://www.linkedin.com/in/devvsag/",
     icon: LinkedinIcon,
   },
 ];
