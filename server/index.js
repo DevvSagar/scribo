@@ -24,6 +24,7 @@ const isProduction = NODE_ENV === "production";
 const PORT = Number.parseInt(process.env.PORT || "5001", 10);
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY;
+const UPLOAD_ACCESS_TOKEN = process.env.UPLOAD_ACCESS_TOKEN;
 const ASSEMBLY_BASE_URL = "https://api.assemblyai.com/v2";
 const POLL_INTERVAL_MS = 3000;
 const MAX_AUDIO_UPLOAD_SIZE_MB = Number.parseInt(
@@ -43,7 +44,7 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const requiredEnvVars = ["ASSEMBLY_API_KEY", "EMAIL_USER", "EMAIL_PASS"];
+const requiredEnvVars = ["ASSEMBLY_API_KEY"];
 if (isProduction) {
   requiredEnvVars.push("FRONTEND_URL", "PORT");
 }
@@ -57,6 +58,10 @@ if (missingEnvVars.length > 0) {
   throw new Error(
     `Missing required environment variables: ${missingEnvVars.join(", ")}`,
   );
+}
+
+if (!UPLOAD_ACCESS_TOKEN) {
+  console.warn("UPLOAD_ACCESS_TOKEN is not set");
 }
 
 const allowedMimeTypes = new Set([
@@ -118,7 +123,7 @@ const upload = multer({
 const app = express();
 
 app.disable("x-powered-by");
-app.set("trust proxy", 1);
+app.set("trust proxy", isProduction ? 1 : false);
 
 const logInfo = (message) => {
   console.log(`[server] ${message}`);
@@ -153,6 +158,20 @@ const sanitizeRequest = (req, _res, next) => {
     if (req[key] && typeof req[key] === "object") {
       sanitizeObject(req[key]);
     }
+  }
+
+  next();
+};
+
+const requireUploadAccess = (req, res, next) => {
+  const providedToken = req.get("x-upload-token");
+
+  if (
+    !providedToken ||
+    !UPLOAD_ACCESS_TOKEN ||
+    providedToken !== UPLOAD_ACCESS_TOKEN
+  ) {
+    return res.status(401).json({ error: "Unauthorized." });
   }
 
   next();
@@ -344,7 +363,6 @@ const apiLimiter = rateLimit({
 
 app.use(
   helmet({
-    contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
@@ -364,8 +382,8 @@ app.use(
 
       callback(createHttpError(403, "Origin not allowed by CORS policy."));
     },
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "x-upload-token"],
   }),
 );
 
@@ -374,7 +392,6 @@ app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(sanitizeRequest);
 app.use("/api", apiLimiter);
 app.use("/api", contactRoutes);
-app.use("/upload", uploadLimiter);
 
 app.get("/api/test", (_req, res) => {
   res.status(200).json({ message: "Backend Ready" });
@@ -395,6 +412,77 @@ app.get("/health", (_req, res) => {
 });
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const detectMediaTypeFromFile = async (filePath) => {
+  const fileHandle = await fsPromises.open(filePath, "r");
+
+  try {
+    const buffer = Buffer.alloc(64);
+    const { bytesRead } = await fileHandle.read(buffer, 0, buffer.length, 0);
+    const header = buffer.subarray(0, bytesRead);
+    const extension = path.extname(filePath).toLowerCase();
+
+    if (
+      header.length >= 12 &&
+      header.subarray(0, 4).toString("ascii") === "RIFF" &&
+      header.subarray(8, 12).toString("ascii") === "WAVE"
+    ) {
+      return ".wav";
+    }
+
+    if (
+      header.length >= 3 &&
+      header.subarray(0, 3).toString("ascii") === "ID3"
+    ) {
+      return ".mp3";
+    }
+
+    if (
+      header.length >= 2 &&
+      header[0] === 0xff &&
+      (header[1] & 0xe0) === 0xe0
+    ) {
+      return ".mp3";
+    }
+
+    if (
+      header.length >= 12 &&
+      header.subarray(4, 8).toString("ascii") === "ftyp"
+    ) {
+      const brand = header.subarray(8, 12).toString("ascii");
+      const m4aBrands = new Set(["M4A ", "M4B ", "isom", "mp41", "mp42", "qt  "]);
+      if (extension === ".m4a" && m4aBrands.has(brand)) {
+        return ".m4a";
+      }
+
+      return ".mp4";
+    }
+
+    return null;
+  } finally {
+    await fileHandle.close();
+  }
+};
+
+const assertUploadedFileSignature = async (file) => {
+  const detectedExtension = await detectMediaTypeFromFile(file.path);
+  const providedExtension = path.extname(file.originalname).toLowerCase();
+
+  if (!detectedExtension) {
+    throw createHttpError(400, "Uploaded file content does not match a supported media format.");
+  }
+
+  const compatibleExtensions = new Map([
+    [".mp3", new Set([".mp3"])],
+    [".wav", new Set([".wav"])],
+    [".m4a", new Set([".m4a"])],
+    [".mp4", new Set([".mp4", ".m4a"])],
+  ]);
+
+  if (!compatibleExtensions.get(detectedExtension)?.has(providedExtension)) {
+    throw createHttpError(400, "Uploaded file content does not match the selected file type.");
+  }
+};
 
 const uploadFileToAssembly = async (filePath) => {
   logInfo("Uploading audio file to AssemblyAI.");
@@ -466,88 +554,95 @@ const pollTranscriptResult = async (transcriptId) => {
   throw createHttpError(504, "Transcription timed out. Please try again.");
 };
 
-app.post("/upload", upload.single("file"), async (req, res, next) => {
-  let localFilePath;
+app.post(
+  "/upload",
+  requireUploadAccess,
+  uploadLimiter,
+  upload.single("file"),
+  async (req, res, next) => {
+    let localFilePath;
 
-  try {
-    if (!ASSEMBLY_API_KEY) {
-      throw createHttpError(500, "Server configuration error.");
-    }
+    try {
+      if (!ASSEMBLY_API_KEY) {
+        throw createHttpError(500, "Server configuration error.");
+      }
 
-    if (!req.is("multipart/form-data")) {
-      throw createHttpError(415, "Unsupported content type.");
-    }
+      if (!req.is("multipart/form-data")) {
+        throw createHttpError(415, "Unsupported content type.");
+      }
 
-    if (!req.file) {
-      throw createHttpError(
-        400,
-        'No file uploaded. Attach an audio file using the "file" field.',
-      );
-    }
+      if (!req.file) {
+        throw createHttpError(
+          400,
+          'No file uploaded. Attach an audio file using the "file" field.',
+        );
+      }
 
-    if (
-      typeof req.file.originalname !== "string" ||
-      req.file.originalname.length > 255
-    ) {
-      throw createHttpError(400, "Invalid uploaded file name.");
-    }
+      if (
+        typeof req.file.originalname !== "string" ||
+        req.file.originalname.length > 255
+      ) {
+        throw createHttpError(400, "Invalid uploaded file name.");
+      }
 
-    if (
-      !allowedMimeTypes.has(req.file.mimetype) ||
-      !ALLOWED_MEDIA_EXTENSIONS.test(req.file.originalname)
-    ) {
-      throw createHttpError(400, "Invalid uploaded media file.");
-    }
+      if (
+        !allowedMimeTypes.has(req.file.mimetype) ||
+        !ALLOWED_MEDIA_EXTENSIONS.test(req.file.originalname)
+      ) {
+        throw createHttpError(400, "Invalid uploaded media file.");
+      }
 
-    if (req.file.size > getMaxAllowedBytes(req.file)) {
-      const maxSizeLabel = isVideoUpload(req.file)
-        ? MAX_VIDEO_UPLOAD_SIZE_MB
-        : MAX_AUDIO_UPLOAD_SIZE_MB;
-      throw createHttpError(
-        400,
-        `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
-      );
-    }
+      if (req.file.size > getMaxAllowedBytes(req.file)) {
+        const maxSizeLabel = isVideoUpload(req.file)
+          ? MAX_VIDEO_UPLOAD_SIZE_MB
+          : MAX_AUDIO_UPLOAD_SIZE_MB;
+        throw createHttpError(
+          400,
+          `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
+        );
+      }
 
-    localFilePath = req.file.path;
+      localFilePath = req.file.path;
+      await assertUploadedFileSignature(req.file);
 
-    const uploadUrl = await uploadFileToAssembly(localFilePath);
-    const transcriptId = await requestTranscript(uploadUrl);
-    const transcriptResult = await pollTranscriptResult(transcriptId);
-    const rawHighlights = Array.isArray(
-      transcriptResult.auto_highlights_result?.results,
-    )
-      ? transcriptResult.auto_highlights_result.results
-      : [];
-    const refinedSummary = cleanSummary(transcriptResult.summary);
-    const importantPoints = buildImportantPoints(rawHighlights);
-    const actionItems = buildActionItems(refinedSummary);
+      const uploadUrl = await uploadFileToAssembly(localFilePath);
+      const transcriptId = await requestTranscript(uploadUrl);
+      const transcriptResult = await pollTranscriptResult(transcriptId);
+      const rawHighlights = Array.isArray(
+        transcriptResult.auto_highlights_result?.results,
+      )
+        ? transcriptResult.auto_highlights_result.results
+        : [];
+      const refinedSummary = cleanSummary(transcriptResult.summary);
+      const importantPoints = buildImportantPoints(rawHighlights);
+      const actionItems = buildActionItems(refinedSummary);
 
-    res.status(200).json({
-      transcript:
-        typeof transcriptResult.text === "string" ? transcriptResult.text : "",
-      summary: refinedSummary,
-      importantPoints,
-      actionItems,
-      highlights: rawHighlights,
-      status: transcriptResult.status,
-    });
-  } catch (error) {
-    next(error);
-  } finally {
-    if (localFilePath) {
-      try {
-        if (localFilePath && fs.existsSync(localFilePath)) {
-          await fsPromises.unlink(localFilePath);
+      res.status(200).json({
+        transcript:
+          typeof transcriptResult.text === "string" ? transcriptResult.text : "",
+        summary: refinedSummary,
+        importantPoints,
+        actionItems,
+        highlights: rawHighlights,
+        status: transcriptResult.status,
+      });
+    } catch (error) {
+      next(error);
+    } finally {
+      if (localFilePath) {
+        try {
+          if (localFilePath && fs.existsSync(localFilePath)) {
+            await fsPromises.unlink(localFilePath);
+          }
+        } catch (cleanupError) {
+          logError("Failed to delete temporary upload.", {
+            message: cleanupError.message,
+          });
         }
-      } catch (cleanupError) {
-        logError("Failed to delete temporary upload.", {
-          message: cleanupError.message,
-        });
       }
     }
-  }
-});
+  },
+);
 
 app.use((error, _req, res, _next) => {
   const statusCode =

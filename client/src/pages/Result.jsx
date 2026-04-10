@@ -10,17 +10,6 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
-const previewResultData = {
-  fileName: "product-strategy-notes.txt",
-  result: {
-    status: "completed",
-    summary:
-      "The team aligned on improving the AI summarizer result page so users can understand and act on summaries faster.\n\nThe redesign should use the existing calm light interface, stronger visual hierarchy, and a focused summary panel that makes the generated output feel polished and trustworthy.\n\nNext steps are to refine the summary panel, add practical actions like copy and download, and keep the original text accessible without letting it compete with the AI output.",
-    transcript:
-      "During the product review, the team discussed how the AI summarizer result page should feel after a user submits long-form text. The current experience needs to communicate completion, confidence, and clarity immediately. The original text should stay available for reference, but it should not dominate the screen.\n\nThe AI summary area should be the primary focus. It needs better contrast, generous spacing, and a cleaner reading experience. The team also wants direct actions so users can copy or download the generated summary quickly.\n\nThe final direction is a modern light interface inspired by Notion and ChatGPT, with subtle monochrome accents, soft glass panels, rounded corners, smooth hover states, and a startup-quality layout that works well on both mobile and desktop.",
-  },
-};
-
 const getSummaryParagraphs = (summary) =>
   (summary || "No summary was returned for this text.")
     .split(/\n+/)
@@ -54,12 +43,12 @@ const SkeletonLines = () => (
   </div>
 );
 
-const Result = ({ preview = false }) => {
+const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState("");
-  const resultData = useMemo(() => (preview ? previewResultData : location.state ?? null), [location.state, preview]);
+  const resultData = useMemo(() => location.state ?? null, [location.state]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 650);
@@ -142,10 +131,10 @@ const Result = ({ preview = false }) => {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto max-w-4xl text-center"
         >
-          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-[#666666] shadow-[0_12px_30px_rgba(0,0,0,0.04)] backdrop-blur-2xl">
+          {/* <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-[#666666] shadow-[0_12px_30px_rgba(0,0,0,0.04)] backdrop-blur-2xl">
             <CheckCircle2 className="h-4 w-4 text-[#1f1f1f]" strokeWidth={2} />
             AI Result
-          </div>
+          </div> */}
           <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-[#1f1f1f] sm:text-5xl lg:text-6xl">
             Your Summary is Ready 🎉
           </h1>

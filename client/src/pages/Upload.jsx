@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 const LARGE_FILE_SIZE = 25 * 1024 * 1024;
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+const UPLOAD_TOKEN = import.meta.env.VITE_UPLOAD_TOKEN;
 const ALLOWED_FILE_TYPES = /\.(mp3|wav|m4a|mp4)$/i;
 
 const formatFileSize = (size) => {
@@ -106,6 +107,9 @@ const Upload = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/upload`, {
         method: "POST",
+        headers: {
+          "x-upload-token": UPLOAD_TOKEN,
+        },
         body: formData,
       });
 

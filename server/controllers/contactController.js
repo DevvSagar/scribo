@@ -55,7 +55,10 @@ const createTransporter = () => {
   const { EMAIL_USER, EMAIL_PASS } = process.env;
 
   if (!EMAIL_USER || !EMAIL_PASS) {
-    throw new Error("Email service is not configured.");
+    const error = new Error("Email service is not configured.");
+    error.statusCode = 503;
+    error.publicMessage = "Contact email is not configured right now. Please try again later.";
+    throw error;
   }
 
   return nodemailer.createTransport({
