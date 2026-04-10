@@ -11,6 +11,7 @@ import net from "net";
 import dns from "dns/promises";
 import { fileURLToPath } from "url";
 import { promises as fsPromises } from "fs";
+import contactRoutes from "./routes/contactRoutes.js";
 
 dotenv.config();
 
@@ -25,9 +26,16 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY;
 const ASSEMBLY_BASE_URL = "https://api.assemblyai.com/v2";
 const POLL_INTERVAL_MS = 3000;
-const MAX_AUDIO_UPLOAD_SIZE_MB = Number.parseInt(process.env.MAX_AUDIO_UPLOAD_SIZE_MB || "250", 10);
-const MAX_VIDEO_UPLOAD_SIZE_MB = Number.parseInt(process.env.MAX_VIDEO_UPLOAD_SIZE_MB || "100", 10);
-const MAX_UPLOAD_SIZE_BYTES = Math.max(MAX_AUDIO_UPLOAD_SIZE_MB, MAX_VIDEO_UPLOAD_SIZE_MB) * 1024 * 1024;
+const MAX_AUDIO_UPLOAD_SIZE_MB = Number.parseInt(
+  process.env.MAX_AUDIO_UPLOAD_SIZE_MB || "250",
+  10,
+);
+const MAX_VIDEO_UPLOAD_SIZE_MB = Number.parseInt(
+  process.env.MAX_VIDEO_UPLOAD_SIZE_MB || "100",
+  10,
+);
+const MAX_UPLOAD_SIZE_BYTES =
+  Math.max(MAX_AUDIO_UPLOAD_SIZE_MB, MAX_VIDEO_UPLOAD_SIZE_MB) * 1024 * 1024;
 const ALLOWED_MEDIA_EXTENSIONS = /\.(mp3|wav|m4a|mp4)$/i;
 const BLOCKED_EXTENSIONS = /\.(exe|bat|cmd|sh|js|php|py|jar|msi|dll|com|scr)$/i;
 
@@ -35,7 +43,7 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const requiredEnvVars = ["ASSEMBLY_API_KEY"];
+const requiredEnvVars = ["ASSEMBLY_API_KEY", "EMAIL_USER", "EMAIL_PASS"];
 if (isProduction) {
   requiredEnvVars.push("FRONTEND_URL", "PORT");
 }
@@ -62,14 +70,19 @@ const allowedMimeTypes = new Set([
   "video/mp4",
 ]);
 
-const isVideoUpload = (file) => file.mimetype === "video/mp4" || /\.mp4$/i.test(file.originalname);
+const isVideoUpload = (file) =>
+  file.mimetype === "video/mp4" || /\.mp4$/i.test(file.originalname);
 const getMaxAllowedBytes = (file) =>
-  (isVideoUpload(file) ? MAX_VIDEO_UPLOAD_SIZE_MB : MAX_AUDIO_UPLOAD_SIZE_MB) * 1024 * 1024;
+  (isVideoUpload(file) ? MAX_VIDEO_UPLOAD_SIZE_MB : MAX_AUDIO_UPLOAD_SIZE_MB) *
+  1024 *
+  1024;
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
   filename: (_req, file, cb) => {
-    const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "-");
+    const safeName = path
+      .basename(file.originalname)
+      .replace(/[^a-zA-Z0-9._-]/g, "-");
     cb(null, `${Date.now()}-${safeName}`);
   },
 });
@@ -94,7 +107,11 @@ const upload = multer({
       return;
     }
 
-    cb(new Error("Invalid file type. Only MP3, WAV, M4A, and MP4 files are allowed."));
+    cb(
+      new Error(
+        "Invalid file type. Only MP3, WAV, M4A, and MP4 files are allowed.",
+      ),
+    );
   },
 });
 
@@ -208,8 +225,94 @@ const assertSafeExternalUrl = async (value) => {
 };
 
 const sanitizeAssemblyMessage = (value) => {
-  if (typeof value !== "string") return "Unable to process the uploaded audio right now.";
+  if (typeof value !== "string")
+    return "Unable to process the uploaded audio right now.";
   return value.replace(/[\r\n\t]+/g, " ").slice(0, 200);
+};
+
+const normalizeText = (value) =>
+  typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+
+const splitSummaryItems = (summary) =>
+  (summary || "")
+    .split(/\n+/)
+    .map((item) => normalizeText(item.replace(/^[-*•\d.)\s]+/, "")))
+    .filter((item) => item.length > 0);
+
+const cleanSummary = (summary) => {
+  const seen = new Set();
+  const cleanedItems = splitSummaryItems(summary)
+    .filter((item) => {
+      const key = item.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return item.length > 12;
+    })
+    .slice(0, 8);
+
+  if (cleanedItems.length === 0) {
+    return normalizeText(summary);
+  }
+
+  return cleanedItems.map((item) => `- ${item}`).join("\n");
+};
+
+const weakHighlightTerms = new Set([
+  "thing",
+  "things",
+  "minute",
+  "minutes",
+  "level",
+  "okay",
+  "yeah",
+  "really",
+  "basically",
+  "actually",
+]);
+
+const isUsefulHighlight = (text) => {
+  const normalized = normalizeText(text).toLowerCase();
+  if (normalized.length < 4) return false;
+  if (weakHighlightTerms.has(normalized)) return false;
+  if (/^\d+$/.test(normalized)) return false;
+  return normalized.split(/\s+/).length <= 8;
+};
+
+const getHighlightScore = (highlight) => {
+  const rank = Number(highlight.rank) || 0;
+  const count = Number(highlight.count) || 0;
+  const timestamps = Array.isArray(highlight.timestamps)
+    ? highlight.timestamps.length
+    : 0;
+  return rank + count * 2 + timestamps;
+};
+
+const buildImportantPoints = (highlights = []) => {
+  const seen = new Set();
+
+  return highlights
+    .filter((highlight) => isUsefulHighlight(highlight?.text))
+    .sort((a, b) => getHighlightScore(b) - getHighlightScore(a))
+    .map((highlight) => normalizeText(highlight.text))
+    .filter((text) => {
+      const key = text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 8);
+};
+
+const buildActionItems = (summary) => {
+  const actionPattern =
+    /\b(need|needs|should|next|follow|prepare|review|track|improve|add|keep|use|limit|focus|create|share|send|schedule|decide|align|test|ship)\b/i;
+
+  return splitSummaryItems(summary)
+    .filter((item) => actionPattern.test(item))
+    .map((item) =>
+      item.replace(/^(next steps? are to|next step is to)\s+/i, ""),
+    )
+    .slice(0, 5);
 };
 
 const createHttpError = (statusCode, publicMessage) => {
@@ -241,6 +344,7 @@ const apiLimiter = rateLimit({
 
 app.use(
   helmet({
+    contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
@@ -269,6 +373,7 @@ app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(sanitizeRequest);
 app.use("/api", apiLimiter);
+app.use("/api", contactRoutes);
 app.use("/upload", uploadLimiter);
 
 app.get("/api/test", (_req, res) => {
@@ -319,7 +424,7 @@ const requestTranscript = async (audioUrl) => {
     format_text: true,
     summarization: true,
     summary_model: "informative",
-    summary_type: "bullets",
+    summary_type: "bullets_verbose",
     auto_highlights: true,
   });
 
@@ -336,7 +441,9 @@ const pollTranscriptResult = async (transcriptId) => {
   while (attempts < 120) {
     attempts += 1;
 
-    const response = await assemblyClient.get(`/transcript/${encodeURIComponent(transcriptId)}`);
+    const response = await assemblyClient.get(
+      `/transcript/${encodeURIComponent(transcriptId)}`,
+    );
     const transcript = response.data;
 
     if (transcript.status === "completed") {
@@ -347,7 +454,9 @@ const pollTranscriptResult = async (transcriptId) => {
     if (transcript.status === "error") {
       throw createHttpError(
         502,
-        sanitizeAssemblyMessage(transcript.error || "Transcription failed on the provider side."),
+        sanitizeAssemblyMessage(
+          transcript.error || "Transcription failed on the provider side.",
+        ),
       );
     }
 
@@ -370,20 +479,34 @@ app.post("/upload", upload.single("file"), async (req, res, next) => {
     }
 
     if (!req.file) {
-      throw createHttpError(400, 'No file uploaded. Attach an audio file using the "file" field.');
+      throw createHttpError(
+        400,
+        'No file uploaded. Attach an audio file using the "file" field.',
+      );
     }
 
-    if (typeof req.file.originalname !== "string" || req.file.originalname.length > 255) {
+    if (
+      typeof req.file.originalname !== "string" ||
+      req.file.originalname.length > 255
+    ) {
       throw createHttpError(400, "Invalid uploaded file name.");
     }
 
-    if (!allowedMimeTypes.has(req.file.mimetype) || !ALLOWED_MEDIA_EXTENSIONS.test(req.file.originalname)) {
+    if (
+      !allowedMimeTypes.has(req.file.mimetype) ||
+      !ALLOWED_MEDIA_EXTENSIONS.test(req.file.originalname)
+    ) {
       throw createHttpError(400, "Invalid uploaded media file.");
     }
 
     if (req.file.size > getMaxAllowedBytes(req.file)) {
-      const maxSizeLabel = isVideoUpload(req.file) ? MAX_VIDEO_UPLOAD_SIZE_MB : MAX_AUDIO_UPLOAD_SIZE_MB;
-      throw createHttpError(400, `File too large. Maximum upload size is ${maxSizeLabel} MB.`);
+      const maxSizeLabel = isVideoUpload(req.file)
+        ? MAX_VIDEO_UPLOAD_SIZE_MB
+        : MAX_AUDIO_UPLOAD_SIZE_MB;
+      throw createHttpError(
+        400,
+        `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
+      );
     }
 
     localFilePath = req.file.path;
@@ -391,13 +514,22 @@ app.post("/upload", upload.single("file"), async (req, res, next) => {
     const uploadUrl = await uploadFileToAssembly(localFilePath);
     const transcriptId = await requestTranscript(uploadUrl);
     const transcriptResult = await pollTranscriptResult(transcriptId);
+    const rawHighlights = Array.isArray(
+      transcriptResult.auto_highlights_result?.results,
+    )
+      ? transcriptResult.auto_highlights_result.results
+      : [];
+    const refinedSummary = cleanSummary(transcriptResult.summary);
+    const importantPoints = buildImportantPoints(rawHighlights);
+    const actionItems = buildActionItems(refinedSummary);
 
     res.status(200).json({
-      transcript: typeof transcriptResult.text === "string" ? transcriptResult.text : "",
-      summary: typeof transcriptResult.summary === "string" ? transcriptResult.summary : "",
-      highlights: Array.isArray(transcriptResult.auto_highlights_result?.results)
-        ? transcriptResult.auto_highlights_result.results
-        : [],
+      transcript:
+        typeof transcriptResult.text === "string" ? transcriptResult.text : "",
+      summary: refinedSummary,
+      importantPoints,
+      actionItems,
+      highlights: rawHighlights,
       status: transcriptResult.status,
     });
   } catch (error) {
@@ -405,9 +537,13 @@ app.post("/upload", upload.single("file"), async (req, res, next) => {
   } finally {
     if (localFilePath) {
       try {
-        await fsPromises.unlink(localFilePath);
+        if (localFilePath && fs.existsSync(localFilePath)) {
+          await fsPromises.unlink(localFilePath);
+        }
       } catch (cleanupError) {
-        logError("Failed to delete temporary upload.", { message: cleanupError.message });
+        logError("Failed to delete temporary upload.", {
+          message: cleanupError.message,
+        });
       }
     }
   }
@@ -415,8 +551,7 @@ app.post("/upload", upload.single("file"), async (req, res, next) => {
 
 app.use((error, _req, res, _next) => {
   const statusCode =
-    error.statusCode ||
-    (error instanceof multer.MulterError ? 400 : 500);
+    error.statusCode || (error instanceof multer.MulterError ? 400 : 500);
 
   if (error.response) {
     logError("Upstream API request failed.", {

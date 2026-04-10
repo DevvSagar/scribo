@@ -15,6 +15,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/app" element={<Upload />} />
           <Route path="/result" element={<Result />} />
+          <Route path="/result-preview" element={<Result preview />} />
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route
             path="/features"

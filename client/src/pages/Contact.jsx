@@ -1,5 +1,9 @@
 import { motion as Motion } from "framer-motion";
 import { ArrowUpRight, Mail, MapPin } from "lucide-react";
+import { useState } from "react";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const SUBMIT_COOLDOWN_MS = 8000;
 
 const contactDetails = [
   {
@@ -17,8 +21,84 @@ const contactDetails = [
 ];
 
 const Contact = () => {
-  const handleSubmit = (event) => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    message: "",
+    company: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSubmittedAt, setLastSubmittedAt] = useState(0);
+  const [toast, setToast] = useState({ type: "", message: "" });
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    window.setTimeout(() => setToast({ type: "", message: "" }), 3200);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      message: "",
+      company: "",
+    });
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (formData.company.trim()) {
+      resetForm();
+      showToast("success", "Thanks, your message has been received.");
+      return;
+    }
+
+    if (!API_BASE_URL) {
+      showToast("error", "Contact form is not configured yet.");
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    const now = Date.now();
+    if (now - lastSubmittedAt < SUBMIT_COOLDOWN_MS) {
+      showToast("error", "Please wait a few seconds before sending another message.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to send your message right now.");
+      }
+
+      setLastSubmittedAt(Date.now());
+      resetForm();
+      showToast("success", data.message || "Message sent successfully.");
+    } catch (error) {
+      showToast("error", error.message || "Unable to send your message right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,10 +157,27 @@ const Contact = () => {
           onSubmit={handleSubmit}
           className="flex h-full flex-col rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8"
         >
+          <input
+            type="text"
+            name="company"
+            value={formData.company}
+            onChange={handleInputChange}
+            className="hidden"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+          />
+
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-medium text-[#3f3f3f]">First name</span>
               <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                minLength={2}
+                required
                 className="mt-2 w-full rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-3 text-[#1f1f1f] outline-none transition duration-300 placeholder:text-[#9d9d9d] focus:border-black/20 focus:bg-white"
                 placeholder="Enter your first name..."
               />
@@ -89,6 +186,12 @@ const Contact = () => {
             <label className="block">
               <span className="text-sm font-medium text-[#3f3f3f]">Last name</span>
               <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                minLength={2}
+                required
                 className="mt-2 w-full rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-3 text-[#1f1f1f] outline-none transition duration-300 placeholder:text-[#9d9d9d] focus:border-black/20 focus:bg-white"
                 placeholder="Enter your last name..."
               />
@@ -98,6 +201,11 @@ const Contact = () => {
           <label className="mt-4 block">
             <span className="text-sm font-medium text-[#3f3f3f]">Email</span>
             <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
               className="mt-2 w-full rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-3 text-[#1f1f1f] outline-none transition duration-300 placeholder:text-[#9d9d9d] focus:border-black/20 focus:bg-white"
               placeholder="Enter your email address..."
             />
@@ -106,21 +214,45 @@ const Contact = () => {
           <label className="mt-4 block flex-1">
             <span className="text-sm font-medium text-[#3f3f3f]">How can I help?</span>
             <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleInputChange}
+              minLength={10}
+              required
               className="mt-2 min-h-[14rem] h-[calc(100%-2rem)] w-full rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-3 text-[#1f1f1f] outline-none transition duration-300 placeholder:text-[#9d9d9d] focus:border-black/20 focus:bg-white"
               placeholder="Tell me about the product, current stage, and what you need help with..."
             />
           </label>
 
           <Motion.button
+            type="submit"
             whileHover={{ y: -4, scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
-            className="mt-6 inline-flex items-center justify-center gap-2 self-start rounded-full bg-[#1f1f1f] px-7 py-3.5 text-sm font-semibold text-white transition duration-300 hover:bg-black"
+            disabled={isSubmitting}
+            className="mt-6 inline-flex items-center justify-center gap-2 self-start rounded-full bg-[#1f1f1f] px-7 py-3.5 text-sm font-semibold text-white transition duration-300 hover:bg-black disabled:cursor-not-allowed disabled:opacity-65"
           >
-            Send Message
+            {isSubmitting ? "Sending..." : "Send Message"}
             <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
           </Motion.button>
         </Motion.form>
       </div>
+
+      {toast.message && (
+        <Motion.div
+          initial={{ opacity: 0, y: 18, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className={[
+            "fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border px-5 py-4 text-center text-sm font-medium shadow-[0_20px_50px_rgba(0,0,0,0.16)] backdrop-blur-2xl",
+            toast.type === "success"
+              ? "border-black/10 bg-[#1f1f1f]/95 text-white"
+              : "border-red-400/20 bg-red-50/95 text-red-700",
+          ].join(" ")}
+          role="status"
+          aria-live="polite"
+        >
+          {toast.message}
+        </Motion.div>
+      )}
     </section>
   );
 };
