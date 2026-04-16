@@ -367,24 +367,25 @@ app.use(
   }),
 );
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173"
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin && !isProduction) {
-        callback(null, true);
-        return;
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
 
-      if (origin && origin === FRONTEND_URL) {
-        callback(null, true);
-        return;
-      }
-
-      callback(createHttpError(403, "Origin not allowed by CORS policy."));
+      return callback(createHttpError(403, "Origin not allowed by CORS policy."));
     },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "x-upload-token"],
-  }),
+  })
 );
 
 app.use(express.json({ limit: "100kb" }));
