@@ -114,7 +114,7 @@ The app will run on `http://localhost:5173` and the API will run on `http://loca
 
 ## Author
 
-Sagar Pratap Singh
+Sagar Pratap Singh (Devvx)
 
 - GitHub: [DevvSagar](https://github.com/DevvSagar)
 - LinkedIn: [devvsag](https://www.linkedin.com/in/devvsag)
