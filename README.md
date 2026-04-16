@@ -1,133 +1,208 @@
-> 🚧 **Under Active Development**  
-> This project is continuously evolving with new features, performance improvements, and production-level enhancements.
+# Scribo
 
-# 🚀 Scribo – AI-Powered Meeting Intelligence Platform
+> AI-powered meeting summarization SaaS that turns audio and video recordings into transcripts, summaries, key points, and action items.
 
-Scribo is a full-stack web application that transforms meeting recordings into structured, actionable insights using AI. It enables users to upload audio/video files and instantly receive accurate transcripts along with intelligent summaries.
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#tech-stack)
+[![Backend](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](#tech-stack)
+[![AI](https://img.shields.io/badge/AI-AssemblyAI-6C47FF?style=for-the-badge)](#tech-stack)
+[![Styling](https://img.shields.io/badge/UI-Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](#tech-stack)
+[![Deployment](https://img.shields.io/badge/Deploy-Vercel%20%2B%20Render-black?style=for-the-badge&logo=vercel)](#deployment)
+[![Security](https://img.shields.io/badge/Security-Hardened-success?style=for-the-badge)](#security-features)
 
-> Built with a focus on **security, performance, and real-world production practices**.
+## 🌐 Live Demo
 
----
+- Frontend: [https://scribo-five.vercel.app](https://scribo-five.vercel.app)
+- Backend: `Render deployment URL here`
 
-## ✨ Key Features
+## 📸 Screenshots
 
-* 🎙️ Upload and process audio/video files (MP3, WAV, M4A, MP4)
-* 🧠 AI-powered transcription using AssemblyAI
-* ✍️ Automatic meeting summaries and insights
-* ⚡ Clean and responsive UI for seamless experience
-* 🔐 Secure backend (rate limiting, sanitization, SSRF protection)
-* 📊 Structured result flow for transcripts and summaries
+> Replace these with real product screenshots.
 
----
+- `docs/screenshots/home.png` — Landing page
+- `docs/screenshots/upload.png` — Upload workflow
+- `docs/screenshots/result.png` — AI summary result view
+- `docs/screenshots/features.png` — Pricing / feature comparison
+- `docs/screenshots/contact.png` — Contact page
 
-## 🧠 Problem It Solves
+## ✨ Features
 
-Meetings often generate valuable information that is difficult to track manually. Scribo automates:
+- Upload audio/video meeting files
+- Generate AI transcripts and summaries
+- Extract important points and action items
+- Modern SaaS-style UI built with React + Tailwind
+- Feature / pricing comparison page
+- Contact form with Nodemailer integration
+- Mock authentication flow using `localStorage`
+- Planned Google OAuth integration
+- Production-minded backend validation and security controls
 
-* Note-taking
-* Key insight extraction
-* Time-consuming transcription
-
-👉 Helping users focus on **decision-making instead of documentation**
-
----
-
-## 🏗️ Tech Stack
+## 🛠 Tech Stack
 
 ### Frontend
-
-* React (Vite)
-* Tailwind CSS
+- React
+- Vite
+- Tailwind CSS
+- React Router
+- Framer Motion
 
 ### Backend
+- Node.js
+- Express
+- Multer
+- Nodemailer
+- Validator
+- Express Rate Limit
+- Helmet
+- CORS
 
-* Node.js
-* Express.js
+### AI
+- AssemblyAI
 
-### AI Integration
+### Database
+- MongoDB
 
-* AssemblyAI API
+### Deployment
+- Vercel for frontend
+- Render for backend
 
----
+## 🧩 Architecture Overview
 
-## 🔐 Security & Best Practices
+```text
+React Frontend (Vercel)
+        ↓
+Express API (Render)
+        ↓
+AssemblyAI API
+        ↓
+MongoDB
+```
 
-* Environment-based secret management
-* Input validation and sanitization
-* Rate limiting and request protection
-* CORS configuration for controlled access
-* No client-side persistence of sensitive data
+### Flow
+1. User uploads an audio/video meeting file.
+2. Frontend sends the file to the Express backend.
+3. Backend validates and secures the upload.
+4. Backend forwards media to AssemblyAI for transcription + summarization.
+5. Processed transcript, summary, highlights, and action items are returned to the client.
+6. Meeting/user records can be persisted in MongoDB.
 
----
+## 🔐 Security Features
 
-## 📁 Project Structure
+Security was treated as a core part of the project, not an afterthought.
 
-ai-meeting-app/
-├── client/   # Frontend (React + Vite)
-├── server/   # Backend (Node + Express)
-└── .gitignore
+- `Helmet` for secure HTTP headers
+- Strict `CORS` configuration limited to the frontend domain
+- Rate limiting on sensitive API routes
+- Input validation and sanitization using `validator`
+- Secure file upload checks:
+  - allowed MIME types
+  - allowed extensions
+  - file size validation
+- SSRF protection for external API requests
+- Token-based protection on upload route via `x-upload-token`
+- Environment-variable based secret management
+- Safer backend error handling without leaking internals
 
----
+## 🚀 Installation
 
-## ⚙️ Local Setup
+### 1. Clone the repository
 
-### 1. Clone repository
+```bash
+git clone https://github.com/your-username/scribo.git
+cd scribo
+```
 
-git clone https://github.com/DevvSagar/scribo.git
+### 2. Frontend setup
 
-### 2. Install dependencies
+```bash
+cd client
+npm install
+npm run dev
+```
 
-Frontend:
-cd client && npm install
+### 3. Backend setup
 
-Backend:
-cd server && npm install
+```bash
+cd server
+npm install
+npm run dev
+```
 
-### 3. Run the app
+## 🔧 Environment Variables
 
-Backend:
-cd server && npm run dev
+### Frontend `.env`
 
-Frontend:
-cd client && npm run dev
+```env
+VITE_API_URL=http://localhost:5001
+VITE_UPLOAD_TOKEN=your_secure_upload_token_here
+```
 
----
+### Backend `.env`
 
-## 🔐 Environment Variables
-
-Create a `.env` file inside `/server`:
-
-ASSEMBLY_API_KEY=your_real_assemblyai_api_key
+```env
+ASSEMBLY_API_KEY=your_assemblyai_api_key
+UPLOAD_ACCESS_TOKEN=your_secure_upload_token_here
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_email_app_password
 FRONTEND_URL=http://localhost:5173
 PORT=5001
+NODE_ENV=development
+MAX_AUDIO_UPLOAD_SIZE_MB=250
+MAX_VIDEO_UPLOAD_SIZE_MB=100
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_if_added_later
+```
 
-Create a `.env` file inside `/client`:
+## 📘 Usage Guide
 
-VITE_API_URL=http://localhost:5001
+1. Start the frontend and backend locally.
+2. Open the frontend in your browser.
+3. Upload an audio or video meeting file.
+4. Wait for Scribo to process the file with AI.
+5. Review:
+   - transcript
+   - summary
+   - key points
+   - action items
+6. Use the contact page for inquiries or project communication.
 
----
+## 🧠 Future Improvements
 
-## 📈 Future Improvements
+- Real authentication and session management
+- Google OAuth integration
+- S3 / Cloudinary media storage
+- Background job queues for long-running transcription tasks
+- Webhook-based AssemblyAI processing
+- Meeting history dashboard
+- User accounts and saved summaries
+- Team workspaces
+- Billing / subscriptions
+- Admin analytics panel
 
-* User authentication & saved meeting history
-* Real-time transcription support
-* Team collaboration features
-* Cloud storage integration
+## 🚢 Deployment
 
----
+### Frontend
+- Hosted on **Vercel**
+- Optimized for static React deployment
 
-## 👨‍💻 Author
+### Backend
+- Hosted on **Render**
+- Handles uploads, AI processing, validation, email, and API security
 
-**Sagar Pratap Singh (DevvSagar)**
-Full Stack Developer | Building AI-powered applications
+### Recommended Production Setup
+- Vercel for client
+- Render for Express API
+- MongoDB Atlas for database
+- AssemblyAI for transcription/summarization
+- Environment variables managed per platform
 
----
+## 👤 Author
 
-## ⭐ Show Your Support
+**Your Name**  
+Full-Stack Developer
 
-If you found this project useful, consider giving it a ⭐ on GitHub!
+- GitHub: [https://github.com/your-username](https://github.com/your-username)
+- LinkedIn: [https://linkedin.com/in/your-profile](https://linkedin.com/in/your-profile)
 
-## 🖼️ Preview
+## 📄 License
 
-### 🔹 Clean and modern upload interface
-![Scribo UI](./client/src/assets/Home.png)
+This project is licensed under the **MIT License**.
