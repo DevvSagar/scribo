@@ -1,8 +1,21 @@
+
+
 # Scribo
+
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#tech-stack)
+[![Backend](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](#tech-stack)
+[![AI](https://img.shields.io/badge/AI-AssemblyAI-6C47FF?style=for-the-badge)](#tech-stack)
+[![Styling](https://img.shields.io/badge/UI-Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](#tech-stack)
+[![Deployment](https://img.shields.io/badge/Deploy-Vercel%20%2B%20Render-black?style=for-the-badge&logo=vercel)](#deployment)
+[![Security](https://img.shields.io/badge/Security-Hardened-success?style=for-the-badge)](#security-features)
+
 
 Scribo is an AI meeting summarization app that turns uploaded audio or video into transcripts, summaries, highlights, and action items.
 
+
 ## Overview
+
+
 
 - Frontend: React + Vite + Tailwind CSS + Framer Motion
 - Backend: Node.js + Express + Multer + Nodemailer
