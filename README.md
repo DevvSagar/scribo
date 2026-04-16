@@ -13,7 +13,7 @@ Scribo is an AI meeting summarization app that turns uploaded audio or video int
 
 ### Home
 
-![Scribo home screen](client/src/assets/home.png)
+![Scribo home screen](client/src/assets/Home.png)
 
 ### Upload
 
