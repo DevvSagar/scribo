@@ -9,27 +9,6 @@ Scribo is an AI meeting summarization app that turns uploaded audio or video int
 - AI processing: AssemblyAI
 - Deployment target: Vercel for the client and Render for the server
 
-## Screenshots
-
-### Home
-
-![Scribo home screen](client/src/assets/Home.png)
-
-### Upload
-
-![Scribo upload screen](client/src/assets/upload.png)
-
-### Results
-
-![Scribo result screen](client/src/assets/result.png)
-
-### Features
-
-![Scribo pricing and features screen](client/src/assets/features.png)
-
-### Contact
-
-![Scribo contact screen](client/src/assets/contact.png)
 
 ## Features
 
@@ -139,3 +118,26 @@ Sagar Pratap Singh
 
 - GitHub: [DevvSagar](https://github.com/DevvSagar)
 - LinkedIn: [devvsag](https://www.linkedin.com/in/devvsag)
+
+
+## Screenshots
+
+### Home
+
+![Scribo home screen](client/src/assets/Home.png)
+
+### Upload
+
+![Scribo upload screen](client/src/assets/upload.png)
+
+### Results
+
+![Scribo result screen](client/src/assets/result.png)
+
+### Features
+
+![Scribo pricing and features screen](client/src/assets/features.png)
+
+### Contact
+
+![Scribo contact screen](client/src/assets/contact.png)
