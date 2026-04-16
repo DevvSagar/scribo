@@ -12,7 +12,7 @@
 ## 🌐 Live Demo
 
 - Frontend: [https://scribo-five.vercel.app](https://scribo-five.vercel.app)
-- Backend: `Render deployment URL here`
+- Backend: [https://scribo-ybl1.onrender.com](https://scribo-ybl1.onrender.com)
 
 ## 📸 Screenshots
 
@@ -200,8 +200,8 @@ JWT_SECRET=your_jwt_secret_if_added_later
 **Your Name**  
 Full-Stack Developer
 
-- GitHub: [https://github.com/your-username](https://github.com/your-username)
-- LinkedIn: [https://linkedin.com/in/your-profile](https://linkedin.com/in/your-profile)
+- GitHub: [https://github.com/DevvSagar](https://github.com/DevvSagar)
+- LinkedIn: [www.linkedin.com/in/devvsag](www.linkedin.com/in/devvsag)
 
 ## 📄 License
 
