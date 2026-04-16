@@ -196,7 +196,7 @@ JWT_SECRET=your_jwt_secret_if_added_later
 
 ## 👤 Author
 
-**Your Name**  
+**Sagar Pratap Singh (Devvx)**  
 Full-Stack Developer
 
 - GitHub: [https://github.com/DevvSagar](https://github.com/DevvSagar)
