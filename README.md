@@ -17,11 +17,11 @@
 
 > Replace these with real product screenshots.
 
-- `docs/screenshots/home.png` — Landing page
-- `docs/screenshots/upload.png` — Upload workflow
-- `docs/screenshots/result.png` — AI summary result view
-- `docs/screenshots/features.png` — Pricing / feature comparison
-- `docs/screenshots/contact.png` — Contact page
+- `client/src/assests/home.png` — Landing page
+- `client/src/assests/upload.png` — Upload workflow
+- `client/src/assests/result.png` — AI summary result view
+- `client/src/assests/features.png` — Pricing / feature comparison
+- `client/src/assests/contact.png` — Contact page
 
 ## ✨ Features
 
