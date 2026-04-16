@@ -66,10 +66,10 @@ const Navbar = () => {
               Sign in
             </NavLink>
             <NavLink
-              to="/get-a-demo"
+              to="/features"
               className="inline-flex items-center rounded-xl bg-[#1f1f1f] px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-black"
             >
-              Get a demo
+              Get Premium
             </NavLink>
           </div>
 
@@ -116,11 +116,11 @@ const Navbar = () => {
               Sign in
             </NavLink>
             <NavLink
-              to="/get-a-demo"
+              to="/features"
               className="inline-flex items-center justify-center rounded-xl bg-[#1f1f1f] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-black"
               onClick={() => setIsOpen(false)}
             >
-              Get a demo
+              Get Premium
             </NavLink>
           </div>
         </Motion.div>
