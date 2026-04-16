@@ -53,7 +53,7 @@ const Footer = () => {
           </Link>
 
           <p className="text-sm font-medium text-[#5f5f5f] md:justify-self-center">
-            Built by <span className="text-[#1f1f1f]">Devvx</span>
+            Built by <span className="text-[#1f1f1f]">Sagar Pratap Singh   (Devvx)</span>
           </p>
 
           <div className="flex items-center gap-2.5 md:justify-self-end">
