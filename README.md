@@ -1,207 +1,141 @@
 # Scribo
 
-> AI-powered meeting summarization SaaS that turns audio and video recordings into transcripts, summaries, key points, and action items.
+Scribo is an AI meeting summarization app that turns uploaded audio or video into transcripts, summaries, highlights, and action items.
 
-[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#tech-stack)
-[![Backend](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](#tech-stack)
-[![AI](https://img.shields.io/badge/AI-AssemblyAI-6C47FF?style=for-the-badge)](#tech-stack)
-[![Styling](https://img.shields.io/badge/UI-Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](#tech-stack)
-[![Deployment](https://img.shields.io/badge/Deploy-Vercel%20%2B%20Render-black?style=for-the-badge&logo=vercel)](#deployment)
-[![Security](https://img.shields.io/badge/Security-Hardened-success?style=for-the-badge)](#security-features)
+## Overview
 
-## 🌐 Live Demo
+- Frontend: React + Vite + Tailwind CSS + Framer Motion
+- Backend: Node.js + Express + Multer + Nodemailer
+- AI processing: AssemblyAI
+- Deployment target: Vercel for the client and Render for the server
 
-- Project Link: [https://scribo-five.vercel.app](https://scribo-five.vercel.app)
+## Screenshots
 
-## 📸 Screenshots
+### Home
 
-> Replace these with real product screenshots.
+![Scribo home screen](client/src/assets/home.png)
 
-- `client/src/assests/home.png` — Landing page
-- `client/src/assests/upload.png` — Upload workflow
-- `client/src/assests/result.png` — AI summary result view
-- `client/src/assests/features.png` — Pricing / feature comparison
-- `client/src/assests/contact.png` — Contact page
+### Upload
 
-## ✨ Features
+![Scribo upload screen](client/src/assets/upload.png)
 
-- Upload audio/video meeting files
-- Generate AI transcripts and summaries
-- Extract important points and action items
-- Modern SaaS-style UI built with React + Tailwind
-- Feature / pricing comparison page
-- Contact form with Nodemailer integration
-- Mock authentication flow using `localStorage`
-- Planned Google OAuth integration
-- Production-minded backend validation and security controls
+### Results
 
-## 🛠 Tech Stack
+![Scribo result screen](client/src/assets/result.png)
 
-### Frontend
-- React
-- Vite
-- Tailwind CSS
-- React Router
-- Framer Motion
+### Features
 
-### Backend
-- Node.js
-- Express
-- Multer
-- Nodemailer
-- Validator
-- Express Rate Limit
-- Helmet
-- CORS
+![Scribo pricing and features screen](client/src/assets/features.png)
 
-### AI
-- AssemblyAI
+### Contact
 
-### Database
-- MongoDB
+![Scribo contact screen](client/src/assets/contact.png)
 
-### Deployment
-- Vercel for frontend
-- Render for backend
+## Features
 
-## 🧩 Architecture Overview
+- Upload `MP3`, `WAV`, `M4A`, and `MP4` meeting files
+- Generate transcripts and AI summaries
+- Review formatted results in a dedicated results page
+- Copy or download the generated summary
+- Browse a pricing/features page for plan comparison
+- Send inquiries through the contact form
+- Includes backend protections like `helmet`, rate limiting, upload validation, and token-based upload access
+
+## Project Structure
 
 ```text
-React Frontend (Vercel)
-        ↓
-Express API (Render)
-        ↓
-AssemblyAI API
-        ↓
-MongoDB
+ai-meeting-app/
+├── client/    # React + Vite frontend
+└── server/    # Express API
 ```
 
-### Flow
-1. User uploads an audio/video meeting file.
-2. Frontend sends the file to the Express backend.
-3. Backend validates and secures the upload.
-4. Backend forwards media to AssemblyAI for transcription + summarization.
-5. Processed transcript, summary, highlights, and action items are returned to the client.
-6. Meeting/user records can be persisted in MongoDB.
-
-## 🔐 Security Features
-
-Security was treated as a core part of the project, not an afterthought.
-
-- `Helmet` for secure HTTP headers
-- Strict `CORS` configuration limited to the frontend domain
-- Rate limiting on sensitive API routes
-- Input validation and sanitization using `validator`
-- Secure file upload checks:
-  - allowed MIME types
-  - allowed extensions
-  - file size validation
-- SSRF protection for external API requests
-- Token-based protection on upload route via `x-upload-token`
-- Environment-variable based secret management
-- Safer backend error handling without leaking internals
-
-## 🚀 Installation
+## Local Setup
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/scribo.git
-cd scribo
+git clone https://github.com/DevvSagar/ai-meeting-app.git
+cd ai-meeting-app
 ```
 
-### 2. Frontend setup
+### 2. Install frontend dependencies
 
 ```bash
 cd client
 npm install
-npm run dev
 ```
 
-### 3. Backend setup
+### 3. Install backend dependencies
 
 ```bash
-cd server
+cd ../server
 npm install
-npm run dev
 ```
 
-## 🔧 Environment Variables
+### 4. Configure environment variables
 
-### Frontend `.env`
+Create `client/.env`:
 
 ```env
 VITE_API_URL=http://localhost:5001
 VITE_UPLOAD_TOKEN=your_secure_upload_token_here
 ```
 
-### Backend `.env`
+Create `server/.env`:
 
 ```env
-ASSEMBLY_API_KEY=your_assemblyai_api_key
+ASSEMBLY_API_KEY=your_assemblyai_api_key_here
 UPLOAD_ACCESS_TOKEN=your_secure_upload_token_here
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_email_app_password
+EMAIL_USER=your_gmail_address@gmail.com
+EMAIL_PASS=your_gmail_app_password
 FRONTEND_URL=http://localhost:5173
 PORT=5001
 NODE_ENV=development
 MAX_AUDIO_UPLOAD_SIZE_MB=250
 MAX_VIDEO_UPLOAD_SIZE_MB=100
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_if_added_later
 ```
 
-## 📘 Usage Guide
+### 5. Start the backend
 
-1. Start the frontend and backend locally.
-2. Open the frontend in your browser.
-3. Upload an audio or video meeting file.
-4. Wait for Scribo to process the file with AI.
-5. Review:
-   - transcript
-   - summary
-   - key points
-   - action items
-6. Use the contact page for inquiries or project communication.
+```bash
+cd server
+npm run dev
+```
 
-## 🧠 Future Improvements
+### 6. Start the frontend
 
-- Real authentication and session management
-- Google OAuth integration
-- S3 / Cloudinary media storage
-- Background job queues for long-running transcription tasks
-- Webhook-based AssemblyAI processing
-- Meeting history dashboard
-- User accounts and saved summaries
-- Team workspaces
-- Billing / subscriptions
-- Admin analytics panel
+```bash
+cd client
+npm run dev
+```
 
-## 🚢 Deployment
+The app will run on `http://localhost:5173` and the API will run on `http://localhost:5001`.
 
-### Frontend
-- Hosted on **Vercel**
-- Optimized for static React deployment
+## App Flow
 
-### Backend
-- Hosted on **Render**
-- Handles uploads, AI processing, validation, email, and API security
+1. Open the frontend.
+2. Upload an audio or video file from the app page.
+3. The backend validates the file and forwards it to AssemblyAI.
+4. Scribo returns the transcript and summary.
+5. Review, copy, or download the result.
 
-### Recommended Production Setup
-- Vercel for client
-- Render for Express API
-- MongoDB Atlas for database
-- AssemblyAI for transcription/summarization
-- Environment variables managed per platform
+## Security Notes
 
-## 👤 Author
+- `helmet` for safer HTTP headers
+- `cors` restricted by configured frontend URL
+- Rate limiting on API routes
+- File type and file size validation
+- Upload token check via `x-upload-token`
+- SSRF protection when handling external URLs from AssemblyAI
 
-**Sagar Pratap Singh (Devvx)**  
-Full-Stack Developer
+## Deployment
 
-- GitHub: [https://github.com/DevvSagar](https://github.com/DevvSagar)
-- LinkedIn: [www.linkedin.com/in/devvsag](www.linkedin.com/in/devvsag)
+- Client: Vercel
+- Server: Render
 
-## 📄 License
+## Author
 
-This project is licensed under the **MIT License**.
+Sagar Pratap Singh
+
+- GitHub: [DevvSagar](https://github.com/DevvSagar)
+- LinkedIn: [devvsag](https://www.linkedin.com/in/devvsag)
