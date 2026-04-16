@@ -11,8 +11,7 @@
 
 ## 🌐 Live Demo
 
-- Frontend: [https://scribo-five.vercel.app](https://scribo-five.vercel.app)
-- Backend: [https://scribo-ybl1.onrender.com](https://scribo-ybl1.onrender.com)
+- Project Link: [https://scribo-five.vercel.app](https://scribo-five.vercel.app)
 
 ## 📸 Screenshots
 
