@@ -7,6 +7,8 @@ import logger from "./logger.js";
 
 export const GOOGLE_CALENDAR_SCOPE =
   "https://www.googleapis.com/auth/calendar";
+export const GOOGLE_USERINFO_EMAIL_SCOPE =
+  "https://www.googleapis.com/auth/userinfo.email";
 
 const getGoogleConfig = () => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -34,7 +36,7 @@ export const buildGoogleAuthUrl = (state) => {
   return client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    scope: [GOOGLE_CALENDAR_SCOPE],
+    scope: [GOOGLE_CALENDAR_SCOPE, GOOGLE_USERINFO_EMAIL_SCOPE],
     state,
   });
 };
