@@ -1,6 +1,6 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import authMiddleware from "../middleware/auth.js";
+import authMiddleware, { optionalAuthMiddleware } from "../middleware/auth.js";
 import {
   connectGoogleCalendar,
   createScheduledMeeting,
@@ -25,8 +25,8 @@ const scheduleLimiter = rateLimit({
 });
 
 router.use(scheduleLimiter);
-router.get("/google/connect", connectGoogleCalendar);
-router.get("/google/callback", handleGoogleCalendarCallback);
+router.get("/google/connect", optionalAuthMiddleware, connectGoogleCalendar);
+router.get("/google/callback", optionalAuthMiddleware, handleGoogleCalendarCallback);
 
 router.use(authMiddleware);
 
