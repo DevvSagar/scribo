@@ -5,6 +5,9 @@ import { decryptSecret, encryptSecret } from "./encryption.js";
 import { createHttpError } from "./httpErrors.js";
 import logger from "./logger.js";
 
+export const DEMO_CALENDAR_USER_ID = new mongoose.Types.ObjectId(
+  "000000000000000000000001",
+);
 export const GOOGLE_CALENDAR_SCOPE =
   "https://www.googleapis.com/auth/calendar";
 export const GOOGLE_USERINFO_EMAIL_SCOPE =
@@ -111,8 +114,22 @@ const toUtcISOString = (value) => {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 };
 
+export const getCalendarTokenRecordForUser = async (userId) => {
+  const primaryRecord = await GoogleCalendarToken.findOne({ userId });
+
+  if (primaryRecord) {
+    return primaryRecord;
+  }
+
+  if (userId?.toString() === DEMO_CALENDAR_USER_ID.toString()) {
+    return null;
+  }
+
+  return GoogleCalendarToken.findOne({ userId: DEMO_CALENDAR_USER_ID });
+};
+
 export const getValidOAuthClient = async (userId) => {
-  const tokenRecord = await GoogleCalendarToken.findOne({ userId });
+  const tokenRecord = await getCalendarTokenRecordForUser(userId);
 
   if (!tokenRecord) {
     throw createHttpError(
@@ -121,16 +138,18 @@ export const getValidOAuthClient = async (userId) => {
     );
   }
 
+  const tokenOwnerId = tokenRecord.userId;
+
   const oauth2Client = createOAuthClient();
   oauth2Client.setCredentials(getTokensFromRecord(tokenRecord));
 
   oauth2Client.on("tokens", async (tokens) => {
     try {
-      await persistGoogleTokens(userId, tokens);
-      logger.info("Token refreshed", { userId: userId.toString() });
+      await persistGoogleTokens(tokenOwnerId, tokens);
+      logger.info("Token refreshed", { userId: tokenOwnerId.toString() });
     } catch (error) {
       logger.error("Token refresh persistence failed", {
-        userId: userId.toString(),
+        userId: tokenOwnerId.toString(),
         message: error.message,
       });
     }
@@ -141,7 +160,9 @@ export const getValidOAuthClient = async (userId) => {
 
   if (isExpired) {
     if (!oauth2Client.credentials.refresh_token) {
-      logger.warn("Google refresh token missing", { userId: userId.toString() });
+      logger.warn("Google refresh token missing", {
+        userId: tokenOwnerId.toString(),
+      });
       throw createGoogleReauthError();
     }
 
@@ -151,15 +172,15 @@ export const getValidOAuthClient = async (userId) => {
         ...oauth2Client.credentials,
         ...credentials,
       });
-      await persistGoogleTokens(userId, {
+      await persistGoogleTokens(tokenOwnerId, {
         ...credentials,
         refresh_token:
           credentials.refresh_token || oauth2Client.credentials.refresh_token,
       });
-      logger.info("Token refresh success", { userId: userId.toString() });
+      logger.info("Token refresh success", { userId: tokenOwnerId.toString() });
     } catch (error) {
       logger.warn("Token refresh failed", {
-        userId: userId.toString(),
+        userId: tokenOwnerId.toString(),
         status: error?.code || error?.response?.status || null,
         message: error.message,
       });

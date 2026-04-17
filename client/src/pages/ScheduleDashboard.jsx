@@ -160,25 +160,37 @@ const ScheduleDashboard = () => {
           return;
         }
 
-        if (data.connected) {
-          setErrorMessage("");
-          setNotice("Google Calendar is already connected.");
-        } else {
+        if (googleState === "error") {
           setNotice("");
           setErrorMessage("Google Calendar connection failed. Please try again.");
+          return;
         }
-      } catch (error) {
+
+        setErrorMessage("");
+        setNotice(data.connected ? "Google Calendar is already connected." : "");
+      } catch {
         if (!isMounted) {
           return;
         }
 
+        if (googleState === "connected" || googleState === "success") {
+          setErrorMessage("");
+          setNotice("Google Calendar connected successfully.");
+          return;
+        }
+
+        if (googleState === "error") {
+          setNotice("");
+          setErrorMessage("Google Calendar connection failed. Please try again.");
+          return;
+        }
+
+        setErrorMessage("");
         setNotice("");
-        setErrorMessage(
-          error.message || "Could not verify Google Calendar connection.",
-        );
       } finally {
         if (isMounted) {
           setSearchParams({}, { replace: true });
+          window.history.replaceState({}, document.title, "/dashboard/schedule");
         }
       }
     };

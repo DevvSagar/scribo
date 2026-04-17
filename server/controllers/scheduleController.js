@@ -7,8 +7,10 @@ import { createHttpError } from "../utils/httpErrors.js";
 import {
   buildConferenceRequestId,
   buildGoogleAuthUrl,
+  DEMO_CALENDAR_USER_ID,
   exchangeGoogleCode,
   extractMeetingLink,
+  getCalendarTokenRecordForUser,
   getValidOAuthClient,
 } from "../utils/googleCalendar.js";
 import { encryptSecret } from "../utils/encryption.js";
@@ -26,7 +28,7 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
 const ALLOWED_PLATFORMS = new Set(["gmeet", "zoom", "teams"]);
 const MAX_SCHEDULE_DESCRIPTION_LENGTH = 2000;
-const DEMO_USER_ID = new mongoose.Types.ObjectId("000000000000000000000001");
+const DEMO_USER_ID = DEMO_CALENDAR_USER_ID;
 
 const sanitizeText = (value, { maxLength = 2000, fallback = "" } = {}) => {
   if (typeof value !== "string") return fallback;
@@ -222,7 +224,7 @@ const storeGoogleTokens = async (userId, tokens) => {
 
 export const getGoogleConnectionStatus = async (req, res, next) => {
   try {
-    const tokenRecord = await GoogleCalendarToken.findOne({ userId: req.user._id })
+    const tokenRecord = await getCalendarTokenRecordForUser(req.user._id)
       .select("email expiryDate updatedAt")
       .lean();
 
@@ -249,7 +251,12 @@ export const connectGoogleCalendar = async (req, res, next) => {
 
 export const disconnectGoogleCalendar = async (req, res, next) => {
   try {
-    await GoogleCalendarToken.deleteOne({ userId: req.user._id });
+    const tokenRecord = await getCalendarTokenRecordForUser(req.user._id);
+
+    if (tokenRecord) {
+      await GoogleCalendarToken.deleteOne({ userId: tokenRecord.userId });
+    }
+
     invalidateUserCache(req.user._id);
 
     res.json({ message: "Google Calendar disconnected successfully." });
