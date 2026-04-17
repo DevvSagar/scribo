@@ -25,12 +25,13 @@ const scheduleLimiter = rateLimit({
 });
 
 router.use(scheduleLimiter);
+router.get("/google/connect", connectGoogleCalendar);
+router.get("/google/callback", handleGoogleCalendarCallback);
+
 router.use(authMiddleware);
 
 router.get("/google/status", getGoogleConnectionStatus);
-router.get("/google/connect", connectGoogleCalendar);
 router.delete("/google/disconnect", disconnectGoogleCalendar);
-router.get("/google/callback", handleGoogleCalendarCallback);
 router.post("/create", createScheduledMeeting);
 router.get("/synced-meetings", getSyncedMeetings);
 router.get("/my-meetings", getMyScheduledMeetings);

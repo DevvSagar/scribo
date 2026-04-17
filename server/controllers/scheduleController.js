@@ -26,6 +26,7 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
 const ALLOWED_PLATFORMS = new Set(["gmeet", "zoom", "teams"]);
 const MAX_SCHEDULE_DESCRIPTION_LENGTH = 2000;
+const DEMO_USER_ID = new mongoose.Types.ObjectId("000000000000000000000001");
 
 const sanitizeText = (value, { maxLength = 2000, fallback = "" } = {}) => {
   if (typeof value !== "string") return fallback;
@@ -189,6 +190,8 @@ const buildOAuthState = (userId) =>
     { expiresIn: GOOGLE_CALLBACK_STATE_TTL },
   );
 
+const getOAuthUserId = (req) => req.user?._id || DEMO_USER_ID;
+
 const storeGoogleTokens = async (userId, tokens) => {
   const accessToken = tokens.access_token;
   const refreshToken = tokens.refresh_token;
@@ -236,7 +239,7 @@ export const getGoogleConnectionStatus = async (req, res, next) => {
 
 export const connectGoogleCalendar = async (req, res, next) => {
   try {
-    const state = buildOAuthState(req.user._id);
+    const state = buildOAuthState(getOAuthUserId(req));
     const authUrl = buildGoogleAuthUrl(state);
     res.redirect(authUrl);
   } catch (error) {
@@ -265,16 +268,17 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
     }
 
     const decoded = jwt.verify(state, process.env.JWT_SECRET);
+    const oauthUserId = getOAuthUserId(req);
 
     if (
       decoded.provider !== "google-calendar" ||
-      decoded.userId !== req.user._id.toString()
+      decoded.userId !== oauthUserId.toString()
     ) {
       throw createHttpError(403, "Google OAuth state is invalid.");
     }
 
     const { client, tokens } = await exchangeGoogleCode(code);
-    await storeGoogleTokens(req.user._id, tokens);
+    await storeGoogleTokens(oauthUserId, tokens);
 
     const oauth2 = await client.request({
       url: "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -284,7 +288,7 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
 
     if (googleEmail) {
       await GoogleCalendarToken.updateOne(
-        { userId: req.user._id },
+        { userId: oauthUserId },
         { $set: { email: googleEmail.toLowerCase() } },
       );
     }
