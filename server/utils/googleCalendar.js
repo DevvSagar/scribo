@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import mongoose from "mongoose";
 import { google } from "googleapis";
 import GoogleCalendarToken from "../models/GoogleCalendarToken.js";
 import { decryptSecret, encryptSecret } from "./encryption.js";
