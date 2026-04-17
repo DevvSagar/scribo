@@ -185,7 +185,7 @@ const Home = () => {
               A cleaner workflow from recording to follow-up.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-[#5f5f5f]">
-              Everything is designed to feel lightweight, premium, and useful immediately after the meeting ends.
+              Everything is designed to feel lightweight, polished, and useful immediately after the meeting ends.
             </p>
           </Motion.div>
 

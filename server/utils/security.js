@@ -2,6 +2,7 @@ export const AUTH_COOKIE_NAME = "scribo_token";
 export const PASSWORD_MIN_LENGTH = 6;
 export const BCRYPT_SALT_ROUNDS = 10;
 export const JWT_EXPIRES_IN = "7d";
+export const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const isValidEmail = (value) => {
   if (typeof value !== "string") return false;
@@ -17,17 +18,17 @@ export const normalizeEmail = (value) => value.trim().toLowerCase();
 
 export const getCookieOptions = (isProduction) => ({
   httpOnly: true,
+  secure: isProduction,
   path: "/",
   sameSite: isProduction ? "none" : "lax",
-  secure: isProduction,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: AUTH_COOKIE_MAX_AGE_MS,
 });
 
 export const getClearCookieOptions = (isProduction) => ({
   httpOnly: true,
+  secure: isProduction,
   path: "/",
   sameSite: isProduction ? "none" : "lax",
-  secure: isProduction,
 });
 
 export const parseCookies = (cookieHeader = "") =>

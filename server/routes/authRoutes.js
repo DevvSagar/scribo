@@ -14,9 +14,11 @@ import {
   JWT_EXPIRES_IN,
   normalizeEmail,
 } from "../utils/security.js";
+import logger from "../utils/logger.js";
 
 const router = express.Router();
 const isProduction = process.env.NODE_ENV === "production";
+const AUTH_INPUT_MAX_LENGTH = 320;
 
 const buildToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -24,31 +26,43 @@ const buildToken = (userId) =>
   });
 
 const setAuthCookie = (res, token) => {
-  // Store the JWT in an httpOnly cookie so frontend JavaScript cannot read it.
   res.cookie(AUTH_COOKIE_NAME, token, getCookieOptions(isProduction));
-  console.log(`[auth] set cookie "${AUTH_COOKIE_NAME}" with 7 day session`);
 };
 
 const clearAuthCookie = (res) => {
   res.clearCookie(AUTH_COOKIE_NAME, getClearCookieOptions(isProduction));
-  console.log(`[auth] cleared cookie "${AUTH_COOKIE_NAME}"`);
+};
+
+const parseAuthInput = (body = {}) => {
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const password = typeof body.password === "string" ? body.password : "";
+
+  if (!email || !password) {
+    throw createHttpError(400, "Email and password are required.");
+  }
+
+  if (email.length > AUTH_INPUT_MAX_LENGTH) {
+    throw createHttpError(400, "Email is too long.");
+  }
+
+  if (password.length > 1024) {
+    throw createHttpError(400, "Password is too long.");
+  }
+
+  if (!isValidEmail(email)) {
+    throw createHttpError(400, "Please enter a valid email address.");
+  }
+
+  if (!isValidPassword(password)) {
+    throw createHttpError(400, "Password must be at least 6 characters long.");
+  }
+
+  return { email, password };
 };
 
 router.post("/signup", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
-    }
-
-    if (!isValidEmail(email)) {
-      throw createHttpError(400, "Please enter a valid email address.");
-    }
-
-    if (!isValidPassword(password)) {
-      throw createHttpError(400, "Password must be at least 6 characters long.");
-    }
+    const { email, password } = parseAuthInput(req.body);
 
     const normalizedEmail = normalizeEmail(email);
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -75,6 +89,9 @@ router.post("/signup", async (req, res) => {
       },
     });
   } catch (error) {
+    if (!error.statusCode) {
+      logger.error("Signup failed.", { message: error.message });
+    }
     res.status(error.statusCode || 500).json({
       error: error.statusCode ? error.publicMessage : "Could not create user.",
     });
@@ -83,19 +100,7 @@ router.post("/signup", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
-    }
-
-    if (!isValidEmail(email)) {
-      throw createHttpError(400, "Please enter a valid email address.");
-    }
-
-    if (!isValidPassword(password)) {
-      throw createHttpError(400, "Password must be at least 6 characters long.");
-    }
+    const { email, password } = parseAuthInput(req.body);
 
     const user = await User.findOne({ email: normalizeEmail(email) });
 
@@ -119,6 +124,9 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
+    if (!error.statusCode) {
+      logger.error("Login failed.", { message: error.message });
+    }
     res.status(error.statusCode || 500).json({
       error: error.statusCode ? error.publicMessage : "Could not log in.",
     });

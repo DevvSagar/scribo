@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      setUser(data.user);
+      setUser(data.user || null);
     } catch {
       setUser(null);
     } finally {
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (nextUser) => {
-    setUser(nextUser);
+    setUser(nextUser || null);
   };
 
   const logout = async () => {

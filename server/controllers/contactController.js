@@ -1,5 +1,6 @@
-import nodemailer from "nodemailer";
 import validator from "validator";
+import { createEmailTransporter } from "../utils/emailTransport.js";
+import logger from "../utils/logger.js";
 
 const MIN_NAME_LENGTH = 2;
 const MIN_MESSAGE_LENGTH = 10;
@@ -51,25 +52,6 @@ const validateContactInput = (body) => {
   };
 };
 
-const createTransporter = () => {
-  const { EMAIL_USER, EMAIL_PASS } = process.env;
-
-  if (!EMAIL_USER || !EMAIL_PASS) {
-    const error = new Error("Email service is not configured.");
-    error.statusCode = 503;
-    error.publicMessage = "Contact email is not configured right now. Please try again later.";
-    throw error;
-  }
-
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASS,
-    },
-  });
-};
-
 export const sendContactEmail = async (req, res, next) => {
   try {
     const { errors, values } = validateContactInput(req.body || {});
@@ -87,9 +69,9 @@ export const sendContactEmail = async (req, res, next) => {
     const escapedFullName = validator.escape(fullName);
     const escapedEmail = validator.escape(email);
     const escapedMessage = validator.escape(message);
-    const transporter = createTransporter();
+    const transporter = createEmailTransporter();
 
-    console.log(`[contact] New Message received`);
+    logger.info("Contact form submission accepted.");
 
     await transporter.sendMail({
       from: `"Scribo Contact" <${process.env.EMAIL_USER}>`,

@@ -290,6 +290,11 @@ const UploadPanel = () => {
             <span className="rounded-full border border-black/8 bg-white px-3 py-1.5">
               AI summary + transcript
             </span>
+            {isAuthenticated && (
+              <span className="rounded-full border border-black/8 bg-[#1f1f1f] px-3 py-1.5 text-white">
+                Signed in
+              </span>
+            )}
           </div>
 
           {errorMessage && (

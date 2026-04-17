@@ -1,15 +1,11 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { AUTH_COOKIE_NAME, parseCookies } from "../utils/security.js";
+import { AUTH_COOKIE_NAME } from "../utils/security.js";
+import logger from "../utils/logger.js";
 
 const authMiddleware = async (req, res, next) => {
   try {
-    const cookies = parseCookies(req.headers.cookie || "");
-    const token = cookies[AUTH_COOKIE_NAME];
-
-    console.log(
-      `[auth] reading cookie token for ${req.method} ${req.originalUrl}: ${token ? "found" : "missing"}`,
-    );
+    const token = req.cookies?.[AUTH_COOKIE_NAME];
 
     if (!token) {
       return res.status(401).json({ error: "Authentication is required." });
@@ -24,8 +20,13 @@ const authMiddleware = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch {
-    res.status(401).json({ error: "Invalid token." });
+  } catch (error) {
+    logger.warn("Authentication failed.", {
+      path: req.originalUrl,
+      method: req.method,
+      message: error.message,
+    });
+    res.status(401).json({ error: "Invalid or expired token." });
   }
 };
 

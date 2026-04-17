@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/features", label: "Features" },
   { to: "/contact", label: "Contact" },
   { to: "/privacy-policy", label: "Privacy" },
 ];
@@ -14,6 +13,9 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const centerLinks = isAuthenticated
+    ? [{ to: "/app", label: "Workspace" }]
+    : navLinks;
 
   const handleLogout = () => {
     logout();
@@ -38,7 +40,7 @@ const Navbar = () => {
 
           <div className="absolute left-1/2 hidden -translate-x-1/2 items-center lg:flex">
             <div className="flex items-center gap-7 xl:gap-9">
-              {navLinks.map((link) => (
+              {centerLinks.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -70,12 +72,6 @@ const Navbar = () => {
           <div className="hidden shrink-0 items-center gap-2.5 md:flex">
             {isAuthenticated ? (
               <>
-                <NavLink
-                  to="/app"
-                  className="inline-flex items-center rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/18 hover:bg-[#fafafa]"
-                >
-                  Workspace
-                </NavLink>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -85,19 +81,15 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <NavLink
-                to="/sign-in"
-                className="inline-flex items-center rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:border-black/18 hover:bg-[#fafafa]"
-              >
-                Sign in
-              </NavLink>
+              <>
+                <NavLink
+                  to="/sign-in"
+                  className="inline-flex items-center rounded-xl bg-[#1f1f1f] px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-black"
+                >
+                  Sign in
+                </NavLink>
+              </>
             )}
-            <NavLink
-              to="/features"
-              className="inline-flex items-center rounded-xl bg-[#1f1f1f] px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-black"
-            >
-              Get Premium
-            </NavLink>
           </div>
 
           <button
@@ -119,7 +111,7 @@ const Navbar = () => {
           className="border-t border-black/8 px-5 py-4 md:hidden"
         >
           <div className="flex w-full flex-col gap-4 sm:px-3">
-            {navLinks.map((link) => (
+            {centerLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
@@ -137,13 +129,6 @@ const Navbar = () => {
 
             {isAuthenticated ? (
               <>
-                <NavLink
-                  to="/app"
-                  className="inline-flex items-center justify-center rounded-xl border border-black/10 bg-white px-5 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:bg-[#fafafa]"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Workspace
-                </NavLink>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -153,21 +138,16 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <NavLink
-                to="/sign-in"
-                className="inline-flex items-center justify-center rounded-xl border border-black/10 bg-white px-5 py-3 text-sm font-medium text-[#1f1f1f] transition duration-300 hover:bg-[#fafafa]"
-                onClick={() => setIsOpen(false)}
-              >
-                Sign in
-              </NavLink>
+              <>
+                <NavLink
+                  to="/sign-in"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#1f1f1f] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-black"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign in
+                </NavLink>
+              </>
             )}
-            <NavLink
-              to="/features"
-              className="inline-flex items-center justify-center rounded-xl bg-[#1f1f1f] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-black"
-              onClick={() => setIsOpen(false)}
-            >
-              Get Premium
-            </NavLink>
           </div>
         </Motion.div>
       )}

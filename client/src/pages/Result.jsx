@@ -1,7 +1,7 @@
 import { motion as Motion } from "framer-motion";
 import {
   ArrowLeft,
-  CheckCircle2,
+  Check,
   Clipboard,
   Download,
   FileText,
@@ -64,6 +64,8 @@ const Result = () => {
   const originalText = result.transcript || "No original text was returned for this result.";
   const summaryParagraphs = getSummaryParagraphs(summaryText);
   const originalWordCount = originalText.trim().split(/\s+/).filter(Boolean).length;
+  const actionItems = Array.isArray(result.actionItems) ? result.actionItems.slice(0, 6) : [];
+  const isAIInsightsLoading = isLoading;
 
   const showToast = (message) => {
     setToast(message);
@@ -94,9 +96,13 @@ const Result = () => {
       `Status: ${result.status || "completed"}`,
       `Original Text: ${originalWordCount} words`,
       "",
-      "SUMMARY",
-      "-------",
+      "=== SUMMARY ===",
       ...summaryItems.map((item, index) => `${index + 1}. ${item}`),
+      "",
+      "=== ACTION ITEMS ===",
+      ...(actionItems.length > 0
+        ? actionItems.map((item, index) => `${index + 1}. ${item}`)
+        : ["No action items identified."]),
       "",
       "SOURCE CONTEXT",
       "--------------",
@@ -197,6 +203,57 @@ const Result = () => {
                     {paragraph}
                   </p>
                 ))
+              )}
+            </div>
+          </article>
+        </Motion.div>
+
+        <Motion.div
+          initial={{ opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.11, duration: 0.45 }}
+          className="grid gap-5"
+        >
+          <article className="rounded-[2rem] border border-emerald-200 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                  Next Steps
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold text-[#1f1f1f]">
+                  Action Items
+                </h2>
+              </div>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                Available
+              </span>
+            </div>
+
+            <div className="mt-5 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/65 p-5">
+              {isAIInsightsLoading ? (
+                <div className="rounded-[1.2rem] border border-emerald-200 bg-white/80 px-4 py-4 text-sm font-medium text-emerald-700">
+                  ⚡ Generating AI insights...
+                </div>
+              ) : isLoading ? (
+                <SkeletonLines />
+              ) : actionItems.length > 0 ? (
+                <ul className="space-y-3 text-sm leading-7 text-[#21543d] sm:text-[0.96rem]">
+                  {actionItems.map((item) => (
+                    <li
+                      key={item}
+                      className="flex gap-3 rounded-[1.2rem] border border-emerald-200/80 bg-white/70 px-4 py-3 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-white"
+                    >
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-emerald-300 bg-white text-emerald-600">
+                        <Check className="h-3.5 w-3.5" strokeWidth={2.4} />
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm leading-7 text-[#5f5f5f]">
+                  No action items were identified from this transcript.
+                </p>
               )}
             </div>
           </article>

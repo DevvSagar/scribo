@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import multer from "multer";
 import axios from "axios";
@@ -7,21 +8,30 @@ import fs from "fs";
 import path from "path";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
+import hpp from "hpp";
 import net from "net";
 import dns from "dns/promises";
 import mongoose from "mongoose";
+import { createRequire } from "module";
 import { fileURLToPath } from "url";
 import { promises as fsPromises } from "fs";
 import contactRoutes from "./routes/contactRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import scheduleRoutes from "./routes/scheduleRoutes.js";
 import { createHttpError } from "./utils/httpErrors.js";
+import { startReminderService } from "./utils/reminderService.js";
+import { generateAIInsights } from "./utils/generateAIInsights.js";
+import { generateInsights } from "./utils/generateInsights.js";
 import User from "./models/User.js";
 import Chat from "./models/Chat.js";
 import { AUTH_COOKIE_NAME, parseCookies } from "./utils/security.js";
 import jwt from "jsonwebtoken";
 
 dotenv.config();
+const require = createRequire(import.meta.url);
+const { clean: cleanXss } = require("xss-clean/lib/xss");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,8 +45,13 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY;
 const UPLOAD_ACCESS_TOKEN = process.env.UPLOAD_ACCESS_TOKEN;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 const ASSEMBLY_BASE_URL = "https://api.assemblyai.com/v2";
 const POLL_INTERVAL_MS = 3000;
+const JSON_BODY_LIMIT = "100kb";
+const URLENCODED_BODY_LIMIT = "100kb";
+const MAX_TRANSCRIPT_LENGTH = 1_000_000;
 const MAX_AUDIO_UPLOAD_SIZE_MB = Number.parseInt(
   process.env.MAX_AUDIO_UPLOAD_SIZE_MB || "250",
   10,
@@ -56,14 +71,24 @@ const MAX_UPLOAD_SIZE_BYTES =
   1024;
 const ALLOWED_MEDIA_EXTENSIONS = /\.(mp3|wav|m4a|mp4)$/i;
 const BLOCKED_EXTENSIONS = /\.(exe|bat|cmd|sh|js|php|py|jar|msi|dll|com|scr)$/i;
+const allowedMimeTypes = new Set([
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/m4a",
+  "video/mp4",
+]);
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const requiredEnvVars = ["ASSEMBLY_API_KEY", "MONGODB_URI", "JWT_SECRET"];
+const requiredEnvVars = ["ASSEMBLY_API_KEY", "MONGODB_URI", "JWT_SECRET", "FRONTEND_URL"];
 if (isProduction) {
-  requiredEnvVars.push("FRONTEND_URL", "PORT");
+  requiredEnvVars.push("PORT");
 }
 
 const missingEnvVars = requiredEnvVars.filter((key) => {
@@ -81,20 +106,102 @@ if (JWT_SECRET.trim().length < 32) {
   throw new Error("JWT_SECRET must be at least 32 characters long.");
 }
 
+if (UPLOAD_ACCESS_TOKEN && UPLOAD_ACCESS_TOKEN.trim().length < 24) {
+  if (isProduction) {
+    console.warn(
+      "UPLOAD_ACCESS_TOKEN is shorter than recommended for production. Use at least 24 characters.",
+    );
+  }
+}
+
+if (OPENAI_API_KEY && OPENAI_API_KEY.trim().length < 20) {
+  throw new Error("OPENAI_API_KEY appears to be invalid.");
+}
+
+const normalizeOrigin = (value) =>
+  typeof value === "string" ? value.trim().replace(/\/+$/, "") : "";
+
+const validateAbsoluteUrl = (value, label) => {
+  let parsed;
+
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`${label} must be a valid absolute URL.`);
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error(`${label} must use http or https.`);
+  }
+
+  return parsed;
+};
+
+if (FRONTEND_URL !== normalizeOrigin(FRONTEND_URL)) {
+  throw new Error("FRONTEND_URL must not include a trailing slash.");
+}
+
+const parsedFrontendUrl = validateAbsoluteUrl(FRONTEND_URL, "FRONTEND_URL");
+
+if (isProduction && parsedFrontendUrl.protocol !== "https:") {
+  throw new Error("FRONTEND_URL must use https in production.");
+}
+
+const hasEmailUser = typeof process.env.EMAIL_USER === "string" && process.env.EMAIL_USER.trim().length > 0;
+const hasEmailPass = typeof process.env.EMAIL_PASS === "string" && process.env.EMAIL_PASS.trim().length > 0;
+if (hasEmailUser !== hasEmailPass) {
+  throw new Error("EMAIL_USER and EMAIL_PASS must be configured together.");
+}
+
+const hasAnyGoogleEnv = [
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI,
+  process.env.GOOGLE_TOKEN_ENCRYPTION_KEY,
+].some((value) => typeof value === "string" && value.trim().length > 0);
+const hasAllGoogleEnv = [
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI,
+  process.env.GOOGLE_TOKEN_ENCRYPTION_KEY,
+].every((value) => typeof value === "string" && value.trim().length > 0);
+if (hasAnyGoogleEnv && !hasAllGoogleEnv) {
+  throw new Error(
+    "Google scheduler configuration is incomplete. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, and GOOGLE_TOKEN_ENCRYPTION_KEY together.",
+  );
+}
+
+if (GOOGLE_REDIRECT_URI) {
+  if (GOOGLE_REDIRECT_URI !== GOOGLE_REDIRECT_URI.trim()) {
+    throw new Error("GOOGLE_REDIRECT_URI must not contain leading or trailing spaces.");
+  }
+
+  const parsedGoogleRedirectUrl = validateAbsoluteUrl(
+    GOOGLE_REDIRECT_URI,
+    "GOOGLE_REDIRECT_URI",
+  );
+
+  if (isProduction && parsedGoogleRedirectUrl.protocol !== "https:") {
+    throw new Error("GOOGLE_REDIRECT_URI must use https in production.");
+  }
+
+  if (parsedGoogleRedirectUrl.pathname !== "/api/schedule/google/callback") {
+    throw new Error(
+      "GOOGLE_REDIRECT_URI must exactly match /api/schedule/google/callback.",
+    );
+  }
+}
+
+if (
+  process.env.GOOGLE_TOKEN_ENCRYPTION_KEY &&
+  process.env.GOOGLE_TOKEN_ENCRYPTION_KEY.trim().length < 32
+) {
+  throw new Error("GOOGLE_TOKEN_ENCRYPTION_KEY must be at least 32 characters long.");
+}
+
 if (!UPLOAD_ACCESS_TOKEN) {
   console.warn("UPLOAD_ACCESS_TOKEN is not set");
 }
-
-const allowedMimeTypes = new Set([
-  "audio/mpeg",
-  "audio/mp3",
-  "audio/wav",
-  "audio/x-wav",
-  "audio/mp4",
-  "audio/x-m4a",
-  "audio/m4a",
-  "video/mp4",
-]);
 
 const isVideoUpload = (file) =>
   file.mimetype === "video/mp4" || /\.mp4$/i.test(file.originalname);
@@ -149,7 +256,7 @@ const upload = multer({
 const app = express();
 
 app.disable("x-powered-by");
-app.set("trust proxy", isProduction ? 1 : false);
+app.set("trust proxy", 1);
 
 const logInfo = (message) => {
   console.log(`[server] ${message}`);
@@ -164,31 +271,27 @@ const connectDatabase = async () => {
   logInfo("MongoDB connected.");
 };
 
-const sanitizeObject = (value) => {
-  if (!value || typeof value !== "object") return;
-
-  if (Array.isArray(value)) {
-    value.forEach(sanitizeObject);
-    return;
+const replaceObjectContents = (target, replacement) => {
+  if (!target || typeof target !== "object" || Array.isArray(target)) {
+    return replacement;
   }
 
-  for (const key of Object.keys(value)) {
-    const shouldRemove = key.startsWith("$") || key.includes(".");
-    if (shouldRemove) {
-      delete value[key];
-      continue;
-    }
-
-    sanitizeObject(value[key]);
-  }
+  Object.keys(target).forEach((key) => {
+    delete target[key];
+  });
+  Object.assign(target, replacement);
+  return target;
 };
 
 const sanitizeRequest = (req, _res, next) => {
-  // Express 5 exposes req.query as a getter-only property, so sanitize in place.
   for (const key of ["body", "params", "query"]) {
-    if (req[key] && typeof req[key] === "object") {
-      sanitizeObject(req[key]);
+    if (!req[key] || typeof req[key] !== "object") {
+      continue;
     }
+
+    const mongoSanitized = mongoSanitize.sanitize(req[key], { replaceWith: "_" });
+    const xssSanitized = cleanXss(mongoSanitized);
+    replaceObjectContents(req[key], xssSanitized);
   }
 
   next();
@@ -330,64 +433,6 @@ const cleanSummary = (summary) => {
   return cleanedItems.map((item) => `- ${item}`).join("\n");
 };
 
-const weakHighlightTerms = new Set([
-  "thing",
-  "things",
-  "minute",
-  "minutes",
-  "level",
-  "okay",
-  "yeah",
-  "really",
-  "basically",
-  "actually",
-]);
-
-const isUsefulHighlight = (text) => {
-  const normalized = normalizeText(text).toLowerCase();
-  if (normalized.length < 4) return false;
-  if (weakHighlightTerms.has(normalized)) return false;
-  if (/^\d+$/.test(normalized)) return false;
-  return normalized.split(/\s+/).length <= 8;
-};
-
-const getHighlightScore = (highlight) => {
-  const rank = Number(highlight.rank) || 0;
-  const count = Number(highlight.count) || 0;
-  const timestamps = Array.isArray(highlight.timestamps)
-    ? highlight.timestamps.length
-    : 0;
-  return rank + count * 2 + timestamps;
-};
-
-const buildImportantPoints = (highlights = []) => {
-  const seen = new Set();
-
-  return highlights
-    .filter((highlight) => isUsefulHighlight(highlight?.text))
-    .sort((a, b) => getHighlightScore(b) - getHighlightScore(a))
-    .map((highlight) => normalizeText(highlight.text))
-    .filter((text) => {
-      const key = text.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, 8);
-};
-
-const buildActionItems = (summary) => {
-  const actionPattern =
-    /\b(need|needs|should|next|follow|prepare|review|track|improve|add|keep|use|limit|focus|create|share|send|schedule|decide|align|test|ship)\b/i;
-
-  return splitSummaryItems(summary)
-    .filter((item) => actionPattern.test(item))
-    .map((item) =>
-      item.replace(/^(next steps? are to|next step is to)\s+/i, ""),
-    )
-    .slice(0, 5);
-};
-
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -412,7 +457,7 @@ const apiLimiter = rateLimit({
 // without making the rest of the API harder to use.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -423,37 +468,41 @@ const authLimiter = rateLimit({
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false,
   }),
 );
 
-const allowedOrigin = FRONTEND_URL || "http://localhost:5173";
+const allowedOrigin = normalizeOrigin(FRONTEND_URL);
 
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
-      if (origin === allowedOrigin) {
+      if (normalizeOrigin(origin) === allowedOrigin) {
         return callback(null, true);
       }
 
       return callback(createHttpError(403, "Origin not allowed by CORS policy."));
     },
     credentials: true,
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Authorization", "Content-Type", "x-upload-token"],
   })
 );
 
-app.use(express.json({ limit: "100kb" }));
-app.use(express.urlencoded({ extended: false, limit: "100kb" }));
+app.use(express.json({ limit: JSON_BODY_LIMIT }));
+app.use(express.urlencoded({ extended: false, limit: URLENCODED_BODY_LIMIT }));
+app.use(cookieParser());
 app.use(sanitizeRequest);
+app.use(hpp());
 app.use(["/signup", "/login"], authLimiter);
 app.use(["/me", "/logout", "/chat", "/chats"], apiLimiter);
 app.use(authRoutes);
 app.use(chatRoutes);
 app.use("/api", apiLimiter);
 app.use("/api", contactRoutes);
+app.use("/api/schedule", scheduleRoutes);
 
 app.get("/api/test", (_req, res) => {
   res.status(200).json({ message: "Backend Ready" });
@@ -466,6 +515,12 @@ app.get("/health", (_req, res) => {
     port: PORT,
     frontendConfigured: Boolean(FRONTEND_URL),
     assemblyConfigured: Boolean(ASSEMBLY_API_KEY),
+    schedulerConfigured: Boolean(
+      process.env.GOOGLE_CLIENT_ID &&
+        process.env.GOOGLE_CLIENT_SECRET &&
+        process.env.GOOGLE_REDIRECT_URI &&
+        process.env.GOOGLE_TOKEN_ENCRYPTION_KEY,
+    ),
     uploadLimits: {
       audioMb: MAX_AUDIO_UPLOAD_SIZE_MB,
       videoMb: MAX_VIDEO_UPLOAD_SIZE_MB,
@@ -543,6 +598,39 @@ const assertUploadedFileSignature = async (file) => {
 
   if (!compatibleExtensions.get(detectedExtension)?.has(providedExtension)) {
     throw createHttpError(400, "Uploaded file content does not match the selected file type.");
+  }
+};
+
+const validateUploadFile = (req, file) => {
+  if (
+    typeof file.originalname !== "string" ||
+    file.originalname.length === 0 ||
+    file.originalname.length > 255
+  ) {
+    throw createHttpError(400, "Invalid uploaded file name.");
+  }
+
+  if (BLOCKED_EXTENSIONS.test(file.originalname)) {
+    throw createHttpError(400, "Invalid file type.");
+  }
+
+  if (!allowedMimeTypes.has(file.mimetype)) {
+    throw createHttpError(400, "Invalid file type.");
+  }
+
+  if (!ALLOWED_MEDIA_EXTENSIONS.test(file.originalname)) {
+    throw createHttpError(400, "Invalid uploaded media file.");
+  }
+
+  if (file.size > getMaxAllowedBytes(req, file)) {
+    const maxSizeLabel = Math.max(
+      getBaseMaxAllowedMb(file),
+      req.user ? AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB : 0,
+    );
+    throw createHttpError(
+      400,
+      `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
+    );
   }
 };
 
@@ -641,30 +729,7 @@ app.post(
         );
       }
 
-      if (
-        typeof req.file.originalname !== "string" ||
-        req.file.originalname.length > 255
-      ) {
-        throw createHttpError(400, "Invalid uploaded file name.");
-      }
-
-      if (
-        !allowedMimeTypes.has(req.file.mimetype) ||
-        !ALLOWED_MEDIA_EXTENSIONS.test(req.file.originalname)
-      ) {
-        throw createHttpError(400, "Invalid uploaded media file.");
-      }
-
-      if (req.file.size > getMaxAllowedBytes(req, req.file)) {
-        const maxSizeLabel = Math.max(
-          getBaseMaxAllowedMb(req.file),
-          req.user ? AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB : 0,
-        );
-        throw createHttpError(
-          400,
-          `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
-        );
-      }
+      validateUploadFile(req, req.file);
 
       localFilePath = req.file.path;
       await assertUploadedFileSignature(req.file);
@@ -677,27 +742,40 @@ app.post(
       )
         ? transcriptResult.auto_highlights_result.results
         : [];
+      const transcriptText =
+        typeof transcriptResult.text === "string" ? transcriptResult.text : "";
+      if (transcriptText.length > MAX_TRANSCRIPT_LENGTH) {
+        throw createHttpError(502, "Transcript exceeds the supported size.");
+      }
       const refinedSummary = cleanSummary(transcriptResult.summary);
-      const importantPoints = buildImportantPoints(rawHighlights);
-      const actionItems = buildActionItems(refinedSummary);
+      let insights = { actionItems: [] };
+
+      try {
+        insights = await generateAIInsights(transcriptText);
+      } catch (error) {
+        logError("AI insights failed, falling back to rule-based insights.", {
+          message: error.message,
+        });
+        insights = generateInsights(transcriptText);
+      }
+
+      const { actionItems } = insights;
 
       if (req.user) {
         await Chat.create({
           userId: req.user._id,
           type: "upload",
           fileName: req.file.originalname,
-          transcript:
-            typeof transcriptResult.text === "string" ? transcriptResult.text : "",
+          transcript: transcriptText,
           summary: refinedSummary,
           response: refinedSummary,
+          actionItems,
         });
       }
 
       res.status(200).json({
-        transcript:
-          typeof transcriptResult.text === "string" ? transcriptResult.text : "",
+        transcript: transcriptText,
         summary: refinedSummary,
-        importantPoints,
         actionItems,
         highlights: rawHighlights,
         status: transcriptResult.status,
@@ -745,8 +823,9 @@ app.use((error, _req, res, _next) => {
 });
 
 connectDatabase()
-  .then(() => {
+  .then(async () => {
     app.listen(PORT, () => {
+      startReminderService();
       logInfo(
         `Server running on port ${PORT} (${NODE_ENV}). Config: frontendConfigured=${Boolean(
           FRONTEND_URL,
