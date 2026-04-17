@@ -303,11 +303,30 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
       });
     }
 
-    const oauth2 = await client.request({
-      url: "https://www.googleapis.com/oauth2/v2/userinfo",
-      method: "GET",
-    });
-    const googleEmail = sanitizeText(oauth2.data?.email || "", { maxLength: 255 });
+    let googleEmail = "";
+
+    if (tokens?.access_token) {
+      try {
+        const oauth2 = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        });
+
+        if (!oauth2.ok) {
+          throw new Error(`Google userinfo request failed with status ${oauth2.status}`);
+        }
+
+        const oauth2Data = await oauth2.json();
+        googleEmail = sanitizeText(oauth2Data?.email || "", { maxLength: 255 });
+      } catch (error) {
+        logger.error("Google OAuth userinfo lookup failed.", {
+          userId: oauthUserId.toString(),
+          message: error.message,
+        });
+      }
+    }
 
     if (googleEmail) {
       try {
