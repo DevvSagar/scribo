@@ -303,44 +303,9 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
       });
     }
 
-    let googleEmail = "";
-
-    if (tokens?.access_token) {
-      try {
-        const oauth2 = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
-          },
-        });
-
-        if (!oauth2.ok) {
-          throw new Error(`Google userinfo request failed with status ${oauth2.status}`);
-        }
-
-        const oauth2Data = await oauth2.json();
-        googleEmail = sanitizeText(oauth2Data?.email || "", { maxLength: 255 });
-      } catch (error) {
-        logger.error("Google OAuth userinfo lookup failed.", {
-          userId: oauthUserId.toString(),
-          message: error.message,
-        });
-      }
-    }
-
-    if (googleEmail) {
-      try {
-        await GoogleCalendarToken.updateOne(
-          { userId: oauthUserId },
-          { $set: { email: googleEmail.toLowerCase() } },
-        );
-      } catch (error) {
-        logger.error("Google OAuth email persistence failed.", {
-          userId: oauthUserId.toString(),
-          message: error.message,
-        });
-      }
-    }
+    // Token exchange is enough to consider the Google connection successful.
+    // Keep account email lookup out of the critical path so OAuth connect does
+    // not fail when Google userinfo is unavailable or rejects the request.
 
     return res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=success`);
   } catch (error) {
