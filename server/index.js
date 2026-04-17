@@ -9,9 +9,17 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import net from "net";
 import dns from "dns/promises";
+import mongoose from "mongoose";
 import { fileURLToPath } from "url";
 import { promises as fsPromises } from "fs";
 import contactRoutes from "./routes/contactRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
+import { createHttpError } from "./utils/httpErrors.js";
+import User from "./models/User.js";
+import Chat from "./models/Chat.js";
+import { AUTH_COOKIE_NAME, parseCookies } from "./utils/security.js";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -23,6 +31,8 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const isProduction = NODE_ENV === "production";
 const PORT = Number.parseInt(process.env.PORT || "5001", 10);
 const FRONTEND_URL = process.env.FRONTEND_URL;
+const MONGODB_URI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY;
 const UPLOAD_ACCESS_TOKEN = process.env.UPLOAD_ACCESS_TOKEN;
 const ASSEMBLY_BASE_URL = "https://api.assemblyai.com/v2";
@@ -35,8 +45,15 @@ const MAX_VIDEO_UPLOAD_SIZE_MB = Number.parseInt(
   process.env.MAX_VIDEO_UPLOAD_SIZE_MB || "100",
   10,
 );
+const AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB = 50;
 const MAX_UPLOAD_SIZE_BYTES =
-  Math.max(MAX_AUDIO_UPLOAD_SIZE_MB, MAX_VIDEO_UPLOAD_SIZE_MB) * 1024 * 1024;
+  Math.max(
+    MAX_AUDIO_UPLOAD_SIZE_MB,
+    MAX_VIDEO_UPLOAD_SIZE_MB,
+    AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB,
+  ) *
+  1024 *
+  1024;
 const ALLOWED_MEDIA_EXTENSIONS = /\.(mp3|wav|m4a|mp4)$/i;
 const BLOCKED_EXTENSIONS = /\.(exe|bat|cmd|sh|js|php|py|jar|msi|dll|com|scr)$/i;
 
@@ -44,7 +61,7 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const requiredEnvVars = ["ASSEMBLY_API_KEY"];
+const requiredEnvVars = ["ASSEMBLY_API_KEY", "MONGODB_URI", "JWT_SECRET"];
 if (isProduction) {
   requiredEnvVars.push("FRONTEND_URL", "PORT");
 }
@@ -58,6 +75,10 @@ if (missingEnvVars.length > 0) {
   throw new Error(
     `Missing required environment variables: ${missingEnvVars.join(", ")}`,
   );
+}
+
+if (JWT_SECRET.trim().length < 32) {
+  throw new Error("JWT_SECRET must be at least 32 characters long.");
 }
 
 if (!UPLOAD_ACCESS_TOKEN) {
@@ -77,8 +98,13 @@ const allowedMimeTypes = new Set([
 
 const isVideoUpload = (file) =>
   file.mimetype === "video/mp4" || /\.mp4$/i.test(file.originalname);
-const getMaxAllowedBytes = (file) =>
-  (isVideoUpload(file) ? MAX_VIDEO_UPLOAD_SIZE_MB : MAX_AUDIO_UPLOAD_SIZE_MB) *
+const getBaseMaxAllowedMb = (file) =>
+  isVideoUpload(file) ? MAX_VIDEO_UPLOAD_SIZE_MB : MAX_AUDIO_UPLOAD_SIZE_MB;
+const getMaxAllowedBytes = (req, file) =>
+  Math.max(
+    getBaseMaxAllowedMb(file),
+    req.user ? AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB : 0,
+  ) *
   1024 *
   1024;
 
@@ -133,6 +159,11 @@ const logError = (message, metadata = {}) => {
   console.error(`[server] ${message}`, metadata);
 };
 
+const connectDatabase = async () => {
+  await mongoose.connect(MONGODB_URI);
+  logInfo("MongoDB connected.");
+};
+
 const sanitizeObject = (value) => {
   if (!value || typeof value !== "object") return;
 
@@ -172,6 +203,29 @@ const requireUploadAccess = (req, res, next) => {
     providedToken !== UPLOAD_ACCESS_TOKEN
   ) {
     return res.status(401).json({ error: "Unauthorized." });
+  }
+
+  next();
+};
+
+const attachOptionalUser = async (req, _res, next) => {
+  try {
+    const cookies = parseCookies(req.headers.cookie || "");
+    const token = cookies[AUTH_COOKIE_NAME];
+
+    if (!token) {
+      next();
+      return;
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (user) {
+      req.user = user;
+    }
+  } catch {
+    // Treat invalid or missing auth as a guest upload.
   }
 
   next();
@@ -334,13 +388,6 @@ const buildActionItems = (summary) => {
     .slice(0, 5);
 };
 
-const createHttpError = (statusCode, publicMessage) => {
-  const error = new Error(publicMessage);
-  error.statusCode = statusCode;
-  error.publicMessage = publicMessage;
-  return error;
-};
-
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -361,36 +408,50 @@ const apiLimiter = rateLimit({
   },
 });
 
+// Keep auth routes on their own limiter so login and signup are protected
+// without making the rest of the API harder to use.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: "Too many authentication requests. Please try again shortly.",
+  },
+});
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "http://localhost:5173"
-];
+const allowedOrigin = FRONTEND_URL || "http://localhost:5173";
 
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      if (origin === allowedOrigin) {
         return callback(null, true);
       }
 
       return callback(createHttpError(403, "Origin not allowed by CORS policy."));
     },
+    credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "x-upload-token"],
+    allowedHeaders: ["Authorization", "Content-Type", "x-upload-token"],
   })
 );
 
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(sanitizeRequest);
+app.use(["/signup", "/login"], authLimiter);
+app.use(["/me", "/logout", "/chat", "/chats"], apiLimiter);
+app.use(authRoutes);
+app.use(chatRoutes);
 app.use("/api", apiLimiter);
 app.use("/api", contactRoutes);
 
@@ -558,6 +619,7 @@ const pollTranscriptResult = async (transcriptId) => {
 app.post(
   "/upload",
   requireUploadAccess,
+  attachOptionalUser,
   uploadLimiter,
   upload.single("file"),
   async (req, res, next) => {
@@ -593,10 +655,11 @@ app.post(
         throw createHttpError(400, "Invalid uploaded media file.");
       }
 
-      if (req.file.size > getMaxAllowedBytes(req.file)) {
-        const maxSizeLabel = isVideoUpload(req.file)
-          ? MAX_VIDEO_UPLOAD_SIZE_MB
-          : MAX_AUDIO_UPLOAD_SIZE_MB;
+      if (req.file.size > getMaxAllowedBytes(req, req.file)) {
+        const maxSizeLabel = Math.max(
+          getBaseMaxAllowedMb(req.file),
+          req.user ? AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB : 0,
+        );
         throw createHttpError(
           400,
           `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
@@ -618,6 +681,18 @@ app.post(
       const importantPoints = buildImportantPoints(rawHighlights);
       const actionItems = buildActionItems(refinedSummary);
 
+      if (req.user) {
+        await Chat.create({
+          userId: req.user._id,
+          type: "upload",
+          fileName: req.file.originalname,
+          transcript:
+            typeof transcriptResult.text === "string" ? transcriptResult.text : "",
+          summary: refinedSummary,
+          response: refinedSummary,
+        });
+      }
+
       res.status(200).json({
         transcript:
           typeof transcriptResult.text === "string" ? transcriptResult.text : "",
@@ -626,6 +701,7 @@ app.post(
         actionItems,
         highlights: rawHighlights,
         status: transcriptResult.status,
+        savedToHistory: Boolean(req.user),
       });
     } catch (error) {
       next(error);
@@ -668,10 +744,19 @@ app.use((error, _req, res, _next) => {
   res.status(statusCode).json({ error: publicMessage });
 });
 
-app.listen(PORT, () => {
-  logInfo(
-    `Server running on port ${PORT} (${NODE_ENV}). Config: frontendConfigured=${Boolean(
-      FRONTEND_URL,
-    )}, assemblyConfigured=${Boolean(ASSEMBLY_API_KEY)}, audioLimitMb=${MAX_AUDIO_UPLOAD_SIZE_MB}, videoLimitMb=${MAX_VIDEO_UPLOAD_SIZE_MB}`,
-  );
-});
+connectDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      logInfo(
+        `Server running on port ${PORT} (${NODE_ENV}). Config: frontendConfigured=${Boolean(
+          FRONTEND_URL,
+        )}, assemblyConfigured=${Boolean(ASSEMBLY_API_KEY)}, audioLimitMb=${MAX_AUDIO_UPLOAD_SIZE_MB}, videoLimitMb=${MAX_VIDEO_UPLOAD_SIZE_MB}, jwtConfigured=${Boolean(
+          JWT_SECRET,
+        )}`,
+      );
+    });
+  })
+  .catch((error) => {
+    logError("Failed to connect to MongoDB.", { message: error.message });
+    process.exit(1);
+  });

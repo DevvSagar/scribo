@@ -141,6 +141,11 @@ const Result = () => {
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#5f5f5f] sm:text-lg">
             Review, copy or download your AI-generated summary
           </p>
+          {result.savedToHistory && (
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#5f5f5f]">
+              This upload and summary were saved to your history automatically.
+            </p>
+          )}
         </Motion.header>
 
         <Motion.div

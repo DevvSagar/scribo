@@ -3,7 +3,7 @@
 # Scribo
 
 
-Scribo is an AI meeting summarization app that turns uploaded audio or video into transcripts, summaries, highlights, and action items.
+Scribo is an AI meeting summarization app that turns uploaded audio or video into transcripts, summaries, highlights, and action items. It now also includes a minimal full-stack authentication flow and per-user chat history.
 
 
 ## Overview
@@ -16,7 +16,7 @@ Scribo is an AI meeting summarization app that turns uploaded audio or video int
 [![Security](https://img.shields.io/badge/Security-Hardened-success?style=for-the-badge)](#security-features)
 
 - Frontend: React + Vite + Tailwind CSS + Framer Motion
-- Backend: Node.js + Express + Multer + Nodemailer
+- Backend: Node.js + Express + MongoDB + Mongoose + Multer + Nodemailer
 - AI processing: AssemblyAI
 - Deployment target: Vercel for the client and Render for the server
 
@@ -25,6 +25,10 @@ Scribo is an AI meeting summarization app that turns uploaded audio or video int
 
 - Upload `MP3`, `WAV`, `M4A`, and `MP4` meeting files
 - Generate transcripts and AI summaries
+- Sign up and log in with email + password
+- Store the JWT in a secure `httpOnly` cookie after login
+- Save user-specific chat history in MongoDB
+- Switch between `Upload` and `History` inside the signed-in workspace
 - Review formatted results in a dedicated results page
 - Copy or download the generated summary
 - Browse a pricing/features page for plan comparison
@@ -76,6 +80,8 @@ Create `server/.env`:
 ```env
 ASSEMBLY_API_KEY=your_assemblyai_api_key_here
 UPLOAD_ACCESS_TOKEN=your_secure_upload_token_here
+MONGODB_URI=mongodb://127.0.0.1:27017/scribo
+JWT_SECRET=replace_with_a_long_secret_key
 EMAIL_USER=your_gmail_address@gmail.com
 EMAIL_PASS=your_gmail_app_password
 FRONTEND_URL=http://localhost:5173
@@ -85,14 +91,18 @@ MAX_AUDIO_UPLOAD_SIZE_MB=250
 MAX_VIDEO_UPLOAD_SIZE_MB=100
 ```
 
-### 5. Start the backend
+### 5. Start MongoDB
+
+Make sure MongoDB is running locally before starting the backend.
+
+### 6. Start the backend
 
 ```bash
 cd server
 npm run dev
 ```
 
-### 6. Start the frontend
+### 7. Start the frontend
 
 ```bash
 cd client
@@ -100,6 +110,15 @@ npm run dev
 ```
 
 The app will run on `http://localhost:5173` and the API will run on `http://localhost:5001`.
+
+## Auth And Chat Endpoints
+
+- `POST /signup` with `email` and `password`
+- `POST /login` with `email` and `password`
+- `POST /logout` to clear the auth cookie
+- `GET /me` to restore the signed-in session
+- `POST /chat` using the auth cookie
+- `GET /chats` using the auth cookie
 
 ## App Flow
 
@@ -112,8 +131,11 @@ The app will run on `http://localhost:5173` and the API will run on `http://loca
 ## Security Notes
 
 - `helmet` for safer HTTP headers
-- `cors` restricted by configured frontend URL
-- Rate limiting on API routes
+- `cors` restricted by configured frontend URL with credentials enabled
+- Rate limiting on auth and API routes
+- JWT stored in an `httpOnly` cookie instead of `localStorage`
+- Email and password validation for signup and login
+- Request sanitizing to reduce NoSQL injection risk
 - File type and file size validation
 - Upload token check via `x-upload-token`
 - SSRF protection when handling external URLs from AssemblyAI
