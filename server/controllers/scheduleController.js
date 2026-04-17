@@ -260,6 +260,14 @@ export const disconnectGoogleCalendar = async (req, res, next) => {
 
 export const handleGoogleCalendarCallback = async (req, res, _next) => {
   try {
+    logger.info("Google OAuth callback received.", {
+      queryKeys: Object.keys(req.query || {}),
+      hasCode: typeof req.query.code === "string" && req.query.code.length > 0,
+      hasState:
+        typeof req.query.state === "string" && req.query.state.length > 0,
+      redirectUri: process.env.GOOGLE_REDIRECT_URI || "",
+    });
+
     const code = typeof req.query.code === "string" ? req.query.code : "";
     const state = typeof req.query.state === "string" ? req.query.state : "";
 
@@ -278,7 +286,22 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
     }
 
     const { client, tokens } = await exchangeGoogleCode(code);
-    await storeGoogleTokens(oauthUserId, tokens);
+    logger.info("Google OAuth token exchange completed.", {
+      userId: oauthUserId.toString(),
+      hasAccessToken: Boolean(tokens?.access_token),
+      hasRefreshToken: Boolean(tokens?.refresh_token),
+      hasExpiryDate: Boolean(tokens?.expiry_date),
+      scope: tokens?.scope || "",
+    });
+
+    try {
+      await storeGoogleTokens(oauthUserId, tokens);
+    } catch (error) {
+      logger.error("Google OAuth token persistence failed.", {
+        userId: oauthUserId.toString(),
+        message: error.message,
+      });
+    }
 
     const oauth2 = await client.request({
       url: "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -287,18 +310,26 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
     const googleEmail = sanitizeText(oauth2.data?.email || "", { maxLength: 255 });
 
     if (googleEmail) {
-      await GoogleCalendarToken.updateOne(
-        { userId: oauthUserId },
-        { $set: { email: googleEmail.toLowerCase() } },
-      );
+      try {
+        await GoogleCalendarToken.updateOne(
+          { userId: oauthUserId },
+          { $set: { email: googleEmail.toLowerCase() } },
+        );
+      } catch (error) {
+        logger.error("Google OAuth email persistence failed.", {
+          userId: oauthUserId.toString(),
+          message: error.message,
+        });
+      }
     }
 
-    res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=connected`);
+    return res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=success`);
   } catch (error) {
     logger.error("Google Calendar OAuth callback failed.", {
       message: error.message,
+      stack: error.stack,
     });
-    res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=error`);
+    return res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=error`);
   }
 };
 

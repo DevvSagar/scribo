@@ -154,7 +154,7 @@ const ScheduleDashboard = () => {
         });
         setRequiresGoogleReconnect(false);
 
-        if (googleState === "connected") {
+        if (googleState === "connected" || googleState === "success") {
           setErrorMessage("");
           setNotice("Google Calendar connected successfully.");
           return;
