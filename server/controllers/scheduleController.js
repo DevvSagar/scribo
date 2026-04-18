@@ -252,6 +252,19 @@ const serializeInternalMeeting = (meeting) => ({
 const sortByNearestStart = (left, right) =>
   new Date(left.startTime).getTime() - new Date(right.startTime).getTime();
 
+const dedupeExternalMeetings = (internalMeetings, externalMeetings) => {
+  const internalCalendarEventIds = new Set(
+    internalMeetings
+      .map((meeting) => meeting.calendarEventId)
+      .filter((calendarEventId) => typeof calendarEventId === "string" && calendarEventId.length > 0),
+  );
+
+  return externalMeetings.filter(
+    (meeting) =>
+      !meeting.calendarEventId || !internalCalendarEventIds.has(meeting.calendarEventId),
+  );
+};
+
 const mapGoogleCalendarError = (
   error,
   fallbackMessage = "Google Calendar is temporarily unavailable.",
@@ -548,6 +561,7 @@ export const getSyncedMeetings = async (req, res, next) => {
     if (statusFilter !== "completed") {
       try {
         externalMeetings = await getExternalMeetingsForUser(req.user._id);
+        externalMeetings = dedupeExternalMeetings(internalMeetings, externalMeetings);
       } catch (error) {
         if (error.statusCode === 400) {
           externalMeetings = [];
