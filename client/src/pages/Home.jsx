@@ -1,257 +1,236 @@
-import { motion as Motion } from "framer-motion";
+import { motion as Motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
-  AudioWaveform,
-  BriefcaseBusiness,
-  Clock3,
-  FileText,
-  Layers3,
-  ListChecks,
-  Search,
   ShieldCheck,
   Sparkles,
-  UploadCloud,
-  Users,
-  WandSparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const productHighlights = [
+const GoogleMeetIcon = () => (
+  <svg viewBox="0 0 48 48" aria-hidden="true" className="h-9 w-9">
+    <rect x="6" y="12" width="22" height="24" rx="6" fill="#34A853" />
+    <path d="M28 18.5 39.5 13v22L28 29.5Z" fill="#188038" />
+    <path d="M17 18h3l5 6-5 6h-3l5-6Z" fill="white" opacity="0.92" />
+  </svg>
+);
+
+const ZoomIcon = () => (
+  <svg viewBox="0 0 48 48" aria-hidden="true" className="h-9 w-9">
+    <rect x="5" y="10" width="38" height="28" rx="10" fill="#2D8CFF" />
+    <rect x="14" y="18" width="12" height="12" rx="3" fill="white" />
+    <path d="M28 20.5 35 17v14l-7-3.5Z" fill="white" />
+  </svg>
+);
+
+const TeamsIcon = () => (
+  <svg viewBox="0 0 48 48" aria-hidden="true" className="h-9 w-9">
+    <rect x="10" y="12" width="18" height="22" rx="5" fill="#5B5FC7" />
+    <circle cx="33.5" cy="17.5" r="5.5" fill="#7B83EB" />
+    <path d="M29 22h10a4 4 0 0 1 4 4v5a5 5 0 0 1-5 5H29Z" fill="#7B83EB" />
+    <path d="M16.5 18h8v3h-2.5v10h-3V21h-2.5Z" fill="white" />
+  </svg>
+);
+
+const AssemblyAiIcon = () => (
+  <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8">
+    <rect x="7" y="7" width="34" height="34" rx="12" fill="#111111" />
+    <path d="M17 30.5 24 16l7 14.5h-4l-1.2-2.9h-3.6L21 30.5Z" fill="white" />
+    <path d="M23.3 24.6h1.4L24 22.8Z" fill="#111111" />
+  </svg>
+);
+
+const MongoDbIcon = () => (
+  <svg viewBox="0 0 48 48" aria-hidden="true" className="h-8 w-8">
+    <rect x="7" y="7" width="34" height="34" rx="12" fill="#E9F6ED" />
+    <path
+      d="M24.1 12c-1.7 3.3-7 8.2-7 14.4 0 5.3 3.1 8.8 6.5 10.8.2.1.4 0 .4-.2.3-1.4.6-3.4.7-5 .1-2.2.1-5.7.1-8.1 0-2.6-.1-8.8-.2-11.5 0-.3-.4-.5-.5-.4Z"
+      fill="#13AA52"
+    />
+    <path
+      d="M24.1 12c.1 2.7.2 8.8.2 11.5 0 2.4 0 5.9-.1 8.1-.1 1.6-.4 3.6-.7 5 0 .2.2.3.4.2 3.9-2.4 7-6 7-11.4 0-6.1-5-10.4-6.8-13.4-.1-.2-.4-.2-.4 0Z"
+      fill="#0E7A3F"
+    />
+  </svg>
+);
+
+const featureDialogs = [
   {
-    title: "Readable AI summaries",
-    description: "Turn long recordings into clean, structured notes that teams can actually scan.",
-    icon: FileText,
+    title: "AI Summary + Notes",
+    description:
+      "AssemblyAI-powered transcription helps turn recordings into readable summaries, notes, and follow-up points.",
+    icon: AssemblyAiIcon,
+    label: "AI Engine",
+    accent: "from-[#f5f5f2] to-[#ffffff]",
   },
   {
-    title: "Action items extracted",
-    description: "Capture follow-ups, owners, and next steps without digging back through the call.",
-    icon: ListChecks,
+    title: "MongoDB Save Layer",
+    description:
+      "Meeting history, uploads, and generated output can be stored in MongoDB so users can come back to their work anytime.",
+    icon: MongoDbIcon,
+    label: "Database",
+    accent: "from-[#eef8f1] to-[#ffffff]",
   },
   {
-    title: "Searchable meeting context",
-    description: "Keep transcripts, highlights, and outcomes in one focused workflow.",
-    icon: Search,
+    title: "Authentication",
+    description:
+      "Protected access keeps user work behind sign-in so uploads, summaries, and saved meeting data stay scoped to each account.",
+    icon: ShieldCheck,
+    label: "Access",
+    accent: "from-[#f5f1e8] to-[#ffffff]",
   },
 ];
 
-const workflowSteps = [
+const platformHighlights = [
   {
-    step: "01",
-    title: "Upload your recording",
-    description: "Drop an MP3, WAV, M4A, or MP4 file into the dedicated workspace.",
-    icon: UploadCloud,
+    title: "Google Meet",
+    description:
+      "Create Meet-enabled meetings and keep them visible in the scheduler flow with attendee support and join links.",
+    icon: GoogleMeetIcon,
+    accent: "from-[#dff3e5] to-[#ffffff]",
   },
   {
-    step: "02",
-    title: "Let Scribo process the meeting",
-    description: "AI transcribes, organizes, and summarizes the conversation in the background.",
-    icon: AudioWaveform,
+    title: "Zoom",
+    description:
+      "Schedule external Zoom meetings while keeping the same planning surface and history-driven product experience.",
+    icon: ZoomIcon,
+    accent: "from-[#e2eeff] to-[#ffffff]",
   },
   {
-    step: "03",
-    title: "Review clear outputs",
-    description: "Get a polished summary, highlights, and transcript ready to share or export.",
-    icon: WandSparkles,
-  },
-];
-
-const useCases = [
-  {
-    title: "Founder updates",
-    description: "Capture product decisions, hiring notes, and follow-ups after fast-moving calls.",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Client meetings",
-    description: "Turn discussions into presentable notes and action items without manual admin work.",
-    icon: Users,
-  },
-  {
-    title: "Ops and internal reviews",
-    description: "Keep recurring meetings searchable, structured, and easy to revisit later.",
-    icon: Layers3,
+    title: "Microsoft Teams",
+    description:
+      "Support Teams links in the same scheduler so the product feels useful across real team environments, not just one stack.",
+    icon: TeamsIcon,
+    accent: "from-[#e6e4ff] to-[#ffffff]",
   },
 ];
 
-const metrics = [
-  { label: "Faster follow-up", value: "Minutes", icon: Clock3 },
-  { label: "Clear deliverables", value: "AI Notes", icon: Sparkles },
-  { label: "Reliable handoff", value: "Team Ready", icon: ShieldCheck },
-];
-
-const sectionIntroTransition = { duration: 0.42, ease: [0.22, 1, 0.36, 1] };
-const cardHover = { y: -4, transition: { duration: 0.2, ease: "easeOut" } };
+const sectionTransition = { duration: 0.55, ease: [0.22, 1, 0.36, 1] };
 
 const Home = () => {
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <div className="relative overflow-hidden">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.06),transparent_58%)]" />
-      <div className="absolute left-1/2 top-0 -z-10 h-[28rem] w-[60rem] -translate-x-1/2 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0))]" />
+      <Motion.div
+        aria-hidden="true"
+        className="absolute inset-0 -z-20"
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#f7f5ee_0%,#fbfbf8_32%,#ffffff_66%,#f3f4ef_100%)]" />
+        <Motion.div
+          className="absolute left-[-8rem] top-[-4rem] h-[28rem] w-[28rem] rounded-full bg-[#d9ede4]/80 blur-3xl"
+          animate={prefersReducedMotion ? undefined : { x: [0, 30, 0], y: [0, 24, 0], scale: [1, 1.06, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <Motion.div
+          className="absolute right-[-6rem] top-24 h-[24rem] w-[24rem] rounded-full bg-[#f1dbc2]/70 blur-3xl"
+          animate={prefersReducedMotion ? undefined : { x: [0, -26, 0], y: [0, 18, 0], scale: [1, 1.08, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <Motion.div
+          className="absolute bottom-[-8rem] left-1/2 h-[22rem] w-[40rem] -translate-x-1/2 rounded-full bg-[#dbe1f6]/70 blur-3xl"
+          animate={prefersReducedMotion ? undefined : { y: [0, -20, 0], opacity: [0.55, 0.8, 0.55] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(24,24,24,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(24,24,24,0.035)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
+      </Motion.div>
 
-      <section className="px-5 pb-14 pt-12 sm:px-8 lg:px-10 lg:pb-18 lg:pt-16 xl:px-12 2xl:px-16">
-        <div className="mx-auto w-full max-w-[1440px]">
+      <section className="px-5 pb-10 pt-10 sm:px-8 lg:px-10 lg:pb-14 lg:pt-12 xl:px-12 2xl:px-16">
+        <div className="mx-auto max-w-[1440px]">
           <Motion.div
-            initial={{ opacity: 0, y: 26 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 28 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
             className="mx-auto flex max-w-5xl flex-col items-center text-center"
           >
-            <Motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.04, ...sectionIntroTransition }}
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-[0.7rem] font-medium uppercase tracking-[0.26em] text-[#666666] shadow-[0_12px_30px_rgba(0,0,0,0.04)] backdrop-blur-sm"
-            >
-              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
-              AI meeting intelligence
-            </Motion.div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-[#646464] shadow-[0_14px_34px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+                Meeting scheduler + AI summaries
+            </div>
 
-            <Motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-6 max-w-5xl text-[3.1rem] font-semibold leading-[0.95] text-[#1f1f1f] sm:text-[4.1rem] lg:text-[5rem] xl:text-[5.5rem]"
-            >
-              Notes your team can trust right after the call.
-            </Motion.h1>
+            <h1 className="mt-6 max-w-5xl font-serif text-[3.1rem] leading-[0.94] tracking-[-0.05em] text-[#1d1d1d] sm:text-[4.2rem] lg:text-[5rem]">
+              Schedule across Meet, Zoom, and Teams while turning recordings into useful follow-up.
+            </h1>
 
-            <Motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.16, ...sectionIntroTransition }}
-              className="mt-6 max-w-3xl text-base leading-8 text-[#565656] sm:text-lg"
-            >
-              Scribo turns meeting recordings into structured summaries, action items, and searchable transcripts.
-              The homepage sells the workflow. The app gives you a focused place to actually use it.
-            </Motion.p>
+            <p className="mt-5 max-w-3xl text-base leading-8 text-[#555555] sm:text-lg">
+              Scribo’s main experience is now a cleaner meeting product: schedule across real platforms, process recordings,
+              generate summaries, and keep follow-up work in a workspace that feels more like a product and less like a demo.
+            </p>
 
-            <Motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.22, ...sectionIntroTransition }}
-              className="mt-8 flex flex-wrap justify-center gap-3"
-            >
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Motion.button
                 type="button"
                 onClick={() => navigate("/app")}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.99 }}
-                className="inline-flex items-center gap-2 rounded-full bg-[#1f1f1f] px-6 py-3.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-black"
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+                className="inline-flex items-center gap-2 rounded-full bg-[#1f1f1f] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_36px_rgba(0,0,0,0.12)] transition hover:bg-black"
               >
-                Get Started
+                Open Workspace
                 <ArrowRight className="h-4 w-4" strokeWidth={2} />
               </Motion.button>
-            </Motion.div>
 
-            <div className="mt-10 grid w-full max-w-4xl gap-3 sm:grid-cols-3">
-              {metrics.map((metric, index) => {
-                const Icon = metric.icon;
-
-                return (
-                  <Motion.div
-                    key={metric.label}
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 + index * 0.08 }}
-                    whileHover={cardHover}
-                    className="rounded-[1.5rem] border border-black/8 bg-white px-5 py-5 text-center shadow-[0_18px_42px_rgba(0,0,0,0.04)]"
-                  >
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5f5f5] text-[#1f1f1f]">
-                      <Icon className="h-5 w-5" strokeWidth={1.8} />
-                    </div>
-                    <p className="mt-4 text-[1.55rem] font-semibold text-[#1f1f1f]">{metric.value}</p>
-                    <p className="mt-1 text-sm text-[#5f5f5f]">{metric.label}</p>
-                  </Motion.div>
-                );
-              })}
+              <Motion.button
+                type="button"
+                onClick={() => navigate("/privacy-policy")}
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/85 px-6 py-3.5 text-sm font-semibold text-[#1f1f1f] shadow-[0_14px_30px_rgba(0,0,0,0.04)] backdrop-blur-xl transition hover:bg-white"
+              >
+                Read Privacy Policy
+              </Motion.button>
             </div>
           </Motion.div>
         </div>
       </section>
 
-      <section id="features" className="px-5 py-14 sm:px-8 lg:px-10 lg:py-18 xl:px-12 2xl:px-16">
-        <div className="mx-auto max-w-[1440px]">
-          <Motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={sectionIntroTransition}
-            className="max-w-3xl"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7a7a7a]">Features</p>
-            <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl lg:text-[3rem]">
-              A cleaner workflow from recording to follow-up.
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-[#5f5f5f]">
-              Everything is designed to feel lightweight, polished, and useful immediately after the meeting ends.
-            </p>
-          </Motion.div>
-
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {productHighlights.map((feature, index) => {
-              const Icon = feature.icon;
-
-              return (
-                <Motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ delay: index * 0.06, duration: 0.45 }}
-                  whileHover={cardHover}
-                  className="rounded-[1.9rem] border border-black/8 bg-white p-6 shadow-[0_18px_45px_rgba(0,0,0,0.05)] transition-shadow duration-300 hover:shadow-[0_24px_55px_rgba(0,0,0,0.08)]"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/8 bg-[#fafafa] text-[#1f1f1f]">
-                    <Icon className="h-5 w-5" strokeWidth={1.8} />
-                  </div>
-                  <h3 className="mt-5 text-xl font-semibold text-[#1f1f1f]">{feature.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-[#5f5f5f] sm:text-[0.98rem]">{feature.description}</p>
-                </Motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 py-14 sm:px-8 lg:px-10 lg:py-18 xl:px-12 2xl:px-16">
+      <section className="px-5 py-14 sm:px-8 lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
         <Motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
-          transition={sectionIntroTransition}
-          className="mx-auto max-w-[1440px] rounded-[2.4rem] border border-black/8 bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)] px-6 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:px-8 sm:py-10 lg:px-10"
+          transition={sectionTransition}
+          className="mx-auto max-w-[1440px] rounded-[2.4rem] border border-black/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(248,246,240,0.9)_100%)] p-6 shadow-[0_28px_68px_rgba(0,0,0,0.06)] backdrop-blur-2xl sm:p-8 lg:p-10"
         >
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7a7a7a]">How It Works</p>
-            <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl">
-              A simple three-step product flow.
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7b7b7b]">Core Flow</p>
+            <h2 className="mt-4 font-serif text-3xl tracking-[-0.04em] text-[#1f1f1f] sm:text-4xl">
+              The product story is AI summaries, saved records, and protected access.
             </h2>
+            <p className="mt-4 text-base leading-8 text-[#5a5a5a]">
+              This section highlights the parts that matter most in the product experience: AssemblyAI summaries and
+              notes, MongoDB-backed storage, and authentication that keeps each workspace protected.
+            </p>
           </div>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {workflowSteps.map((step, index) => {
-              const Icon = step.icon;
+            {featureDialogs.map((item, index) => {
+              const Icon = item.icon;
 
               return (
                 <Motion.div
-                  key={step.step}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  key={item.title}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+                  whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
-                  transition={{ delay: index * 0.06, duration: 0.45 }}
-                  whileHover={cardHover}
-                  className="rounded-[1.7rem] border border-black/8 bg-white p-6"
+                  transition={{ delay: index * 0.06, duration: 0.42 }}
+                  whileHover={prefersReducedMotion ? undefined : { y: -6, scale: 1.01 }}
+                  className={`rounded-[1.8rem] border border-black/8 bg-gradient-to-b ${item.accent} p-6 shadow-[0_18px_44px_rgba(0,0,0,0.05)]`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold tracking-[0.2em] text-[#8a8a8a]">{step.step}</span>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f4f4f4] text-[#1f1f1f]">
-                      <Icon className="h-5 w-5" strokeWidth={1.8} />
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm font-semibold tracking-[0.2em] text-[#8a8a8a]">{item.label}</span>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
+                      {item.title === "Authentication" ? (
+                        <Icon className="h-6 w-6 text-[#1f1f1f]" strokeWidth={1.9} />
+                      ) : (
+                        <Icon />
+                      )}
                     </div>
                   </div>
-                  <h3 className="mt-6 text-xl font-semibold text-[#1f1f1f]">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-[#5f5f5f] sm:text-[0.98rem]">{step.description}</p>
+                  <h3 className="mt-6 text-2xl font-semibold text-[#1f1f1f]">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#585858] sm:text-[0.98rem]">{item.description}</p>
                 </Motion.div>
               );
             })}
@@ -259,45 +238,52 @@ const Home = () => {
         </Motion.div>
       </section>
 
-      <section className="px-5 py-14 sm:px-8 lg:px-10 lg:py-18 xl:px-12 2xl:px-16">
-        <div className="mx-auto max-w-[1440px]">
-          <Motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.35 }}
-            transition={sectionIntroTransition}
-            className="max-w-3xl"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7a7a7a]">Use Cases</p>
-            <h2 className="mt-4 text-3xl font-semibold text-[#1f1f1f] sm:text-4xl lg:text-[3rem]">
-              Built for teams that need faster, clearer post-meeting output.
+      <section className="px-5 py-14 sm:px-8 lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
+        <Motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={sectionTransition}
+          className="mx-auto max-w-[1440px] rounded-[2.4rem] border border-black/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(247,248,242,0.92)_100%)] p-6 shadow-[0_28px_68px_rgba(0,0,0,0.06)] backdrop-blur-2xl sm:p-8 lg:p-10"
+        >
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#7b7b7b]">Platforms</p>
+            <h2 className="mt-4 font-serif text-3xl tracking-[-0.04em] text-[#1f1f1f] sm:text-4xl">
+              Built around the meeting platforms teams already use.
             </h2>
-          </Motion.div>
+            <p className="mt-4 text-base leading-8 text-[#5a5a5a]">
+              The strongest front-facing story here is not a generic workflow. It is that Scribo helps users plan and
+              follow up across Google Meet, Zoom, and Microsoft Teams in one cleaner experience.
+            </p>
+          </div>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {useCases.map((item, index) => {
+            {platformHighlights.map((item, index) => {
               const Icon = item.icon;
 
               return (
                 <Motion.div
                   key={item.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+                  whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
-                  transition={{ delay: index * 0.06, duration: 0.45 }}
-                  whileHover={cardHover}
-                  className="rounded-[1.8rem] border border-black/8 bg-white p-6 shadow-[0_18px_45px_rgba(0,0,0,0.04)]"
+                  transition={{ delay: index * 0.06, duration: 0.42 }}
+                  whileHover={prefersReducedMotion ? undefined : { y: -6, scale: 1.01 }}
+                  className={`rounded-[1.8rem] border border-black/8 bg-gradient-to-b ${item.accent} p-6 shadow-[0_18px_44px_rgba(0,0,0,0.05)]`}
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/8 bg-[#fafafa] text-[#1f1f1f]">
-                    <Icon className="h-5 w-5" strokeWidth={1.8} />
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm font-semibold tracking-[0.2em] text-[#8a8a8a]">Platform</span>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
+                      <Icon />
+                    </div>
                   </div>
-                  <h3 className="mt-5 text-xl font-semibold text-[#1f1f1f]">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-[#5f5f5f] sm:text-[0.98rem]">{item.description}</p>
+                  <h3 className="mt-6 text-2xl font-semibold text-[#1f1f1f]">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#585858] sm:text-[0.98rem]">{item.description}</p>
                 </Motion.div>
               );
             })}
           </div>
-        </div>
+        </Motion.div>
       </section>
 
     </div>

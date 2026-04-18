@@ -12,11 +12,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const DEFAULT_MAX_FILE_SIZE_MB = 25;
-const AUTHENTICATED_MAX_FILE_SIZE_MB = 50;
+const DEFAULT_MAX_AUDIO_FILE_SIZE_MB = 100;
+const DEFAULT_MAX_VIDEO_FILE_SIZE_MB = 200;
+const GUEST_MAX_AUDIO_FILE_SIZE_MB = 100;
+const GUEST_MAX_VIDEO_FILE_SIZE_MB = 200;
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const UPLOAD_TOKEN = import.meta.env.VITE_UPLOAD_TOKEN;
 const ALLOWED_FILE_TYPES = /\.(mp3|wav|m4a|mp4)$/i;
+const VIDEO_FILE_TYPES = /\.mp4$/i;
 
 const formatFileSize = (size) => {
   if (!size) return "0 MB";
@@ -33,10 +36,15 @@ const UploadPanel = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loadingStage, setLoadingStage] = useState("");
-  const maxFileSizeMb = isAuthenticated
-    ? AUTHENTICATED_MAX_FILE_SIZE_MB
-    : DEFAULT_MAX_FILE_SIZE_MB;
-  const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
+  const getMaxFileSizeMb = (targetFile) => {
+    const isVideoFile = VIDEO_FILE_TYPES.test(targetFile?.name || "");
+
+    if (isAuthenticated) {
+      return isVideoFile ? DEFAULT_MAX_VIDEO_FILE_SIZE_MB : DEFAULT_MAX_AUDIO_FILE_SIZE_MB;
+    }
+
+    return isVideoFile ? GUEST_MAX_VIDEO_FILE_SIZE_MB : GUEST_MAX_AUDIO_FILE_SIZE_MB;
+  };
 
   const resetUploadState = () => {
     setFile(null);
@@ -62,6 +70,9 @@ const UploadPanel = () => {
       setErrorMessage("Please upload an MP3, WAV, M4A, or MP4 file.");
       return;
     }
+
+    const maxFileSizeMb = getMaxFileSizeMb(nextFile);
+    const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
 
     if (nextFile.size > maxFileSizeBytes) {
       setFile(null);
@@ -218,6 +229,7 @@ const UploadPanel = () => {
 
   const fileTypeLabel = file?.name?.toLowerCase().endsWith(".mp4") ? "Video upload" : "Audio upload";
   const FileIcon = fileTypeLabel === "Video upload" ? FileVideo2 : FileAudio2;
+  const currentMaxFileSizeMb = getMaxFileSizeMb(file);
 
   return (
     <div className="flex w-full flex-col justify-center">
@@ -268,7 +280,9 @@ const UploadPanel = () => {
             {isDragging ? "Drop your meeting file here" : "Drag and drop your file"}
           </p>
           <p className="mx-auto mt-2.5 max-w-2xl text-sm leading-6 text-[#5f5f5f] sm:text-[0.98rem]">
-            Upload an MP3, WAV, M4A, or MP4 recording. {isAuthenticated ? "Signed-in uploads support files up to 50 MB." : "Guest uploads support files up to 25 MB."} Once selected, Scribo will process the file and move you straight into the result view.
+            Upload an MP3, WAV, M4A, or MP4 recording. Audio files support up to 100 MB and video files support up to
+            200 MB. {isAuthenticated ? "Each signed-in user can keep up to 3 AssemblyAI upload sessions." : ""} Once
+            selected, Scribo will process the file and move you straight into the result view.
           </p>
 
           <div className="mx-auto mt-5 max-w-xl">
@@ -285,7 +299,7 @@ const UploadPanel = () => {
               {file ? fileTypeLabel : "Audio or video"}
             </span>
             <span className="rounded-full border border-black/8 bg-white px-3 py-1.5">
-              {file ? formatFileSize(file.size) : `Up to ${maxFileSizeMb} MB`}
+              {file ? formatFileSize(file.size) : `Up to ${currentMaxFileSizeMb} MB`}
             </span>
             <span className="rounded-full border border-black/8 bg-white px-3 py-1.5">
               AI summary + transcript

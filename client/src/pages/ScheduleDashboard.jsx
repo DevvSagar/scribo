@@ -23,6 +23,7 @@ const sortByNearestStart = (left, right) =>
   new Date(left.startTime).getTime() - new Date(right.startTime).getTime();
 
 const GOOGLE_REAUTH_REQUIRED = "GOOGLE_REAUTH_REQUIRED";
+const NOTICE_DISPLAY_MS = 5000;
 
 const ScheduleDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,6 +43,20 @@ const ScheduleDashboard = () => {
     email: "",
   });
   const [requiresGoogleReconnect, setRequiresGoogleReconnect] = useState(false);
+
+  useEffect(() => {
+    if (!notice) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setNotice("");
+    }, NOTICE_DISPLAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [notice]);
 
   const loadGoogleStatus = useCallback(async () => {
     try {
@@ -63,7 +78,6 @@ const ScheduleDashboard = () => {
     try {
       setIsLoadingMeetings(true);
       setErrorMessage("");
-      setNotice("");
       const data = await getSyncedMeetings({
         status: nextStatus,
       });
@@ -85,11 +99,11 @@ const ScheduleDashboard = () => {
         ...current,
         connected: needsReconnect ? false : current.connected,
       }));
-      setNotice(
-        needsReconnect
-          ? ""
-          : data.externalMeetingsError || "",
-      );
+      if (needsReconnect) {
+        setNotice("");
+      } else if (data.externalMeetingsError) {
+        setNotice(data.externalMeetingsError);
+      }
       setErrorMessage(
         needsReconnect ? "Your Google connection expired" : "",
       );
@@ -210,7 +224,6 @@ const ScheduleDashboard = () => {
     try {
       setIsDisconnectingGoogle(true);
       setErrorMessage("");
-      setNotice("");
 
       await disconnectGoogleCalendar();
       setGoogleStatus({
@@ -230,7 +243,6 @@ const ScheduleDashboard = () => {
   const handleCreateMeeting = async (payload) => {
     setIsCreatingMeeting(true);
     setErrorMessage("");
-    setNotice("");
 
     try {
       await createScheduledMeeting(payload);
@@ -254,7 +266,6 @@ const ScheduleDashboard = () => {
   const handleDeleteMeeting = async (meetingId) => {
     setDeletingMeetingId(meetingId);
     setErrorMessage("");
-    setNotice("");
 
     try {
       await deleteScheduledMeeting(meetingId);

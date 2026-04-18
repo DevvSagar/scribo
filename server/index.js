@@ -53,22 +53,19 @@ const JSON_BODY_LIMIT = "100kb";
 const URLENCODED_BODY_LIMIT = "100kb";
 const MAX_TRANSCRIPT_LENGTH = 1_000_000;
 const MAX_AUDIO_UPLOAD_SIZE_MB = Number.parseInt(
-  process.env.MAX_AUDIO_UPLOAD_SIZE_MB || "250",
+  process.env.MAX_AUDIO_UPLOAD_SIZE_MB || "100",
   10,
 );
 const MAX_VIDEO_UPLOAD_SIZE_MB = Number.parseInt(
-  process.env.MAX_VIDEO_UPLOAD_SIZE_MB || "100",
+  process.env.MAX_VIDEO_UPLOAD_SIZE_MB || "200",
   10,
 );
-const AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB = 50;
+const MAX_ASSEMBLY_UPLOAD_SESSIONS_PER_USER = Number.parseInt(
+  process.env.MAX_ASSEMBLY_UPLOAD_SESSIONS_PER_USER || "3",
+  10,
+);
 const MAX_UPLOAD_SIZE_BYTES =
-  Math.max(
-    MAX_AUDIO_UPLOAD_SIZE_MB,
-    MAX_VIDEO_UPLOAD_SIZE_MB,
-    AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB,
-  ) *
-  1024 *
-  1024;
+  Math.max(MAX_AUDIO_UPLOAD_SIZE_MB, MAX_VIDEO_UPLOAD_SIZE_MB) * 1024 * 1024;
 const ALLOWED_MEDIA_EXTENSIONS = /\.(mp3|wav|m4a|mp4)$/i;
 const BLOCKED_EXTENSIONS = /\.(exe|bat|cmd|sh|js|php|py|jar|msi|dll|com|scr)$/i;
 const allowedMimeTypes = new Set([
@@ -207,13 +204,7 @@ const isVideoUpload = (file) =>
   file.mimetype === "video/mp4" || /\.mp4$/i.test(file.originalname);
 const getBaseMaxAllowedMb = (file) =>
   isVideoUpload(file) ? MAX_VIDEO_UPLOAD_SIZE_MB : MAX_AUDIO_UPLOAD_SIZE_MB;
-const getMaxAllowedBytes = (req, file) =>
-  Math.max(
-    getBaseMaxAllowedMb(file),
-    req.user ? AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB : 0,
-  ) *
-  1024 *
-  1024;
+const getMaxAllowedBytes = (_req, file) => getBaseMaxAllowedMb(file) * 1024 * 1024;
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -623,10 +614,7 @@ const validateUploadFile = (req, file) => {
   }
 
   if (file.size > getMaxAllowedBytes(req, file)) {
-    const maxSizeLabel = Math.max(
-      getBaseMaxAllowedMb(file),
-      req.user ? AUTHENTICATED_UPLOAD_SIZE_FLOOR_MB : 0,
-    );
+    const maxSizeLabel = getBaseMaxAllowedMb(file);
     throw createHttpError(
       400,
       `File too large. Maximum upload size is ${maxSizeLabel} MB.`,
@@ -734,6 +722,20 @@ app.post(
       localFilePath = req.file.path;
       await assertUploadedFileSignature(req.file);
 
+      if (req.user) {
+        const existingAssemblySessions = await Chat.countDocuments({
+          userId: req.user._id,
+          type: "upload",
+        });
+
+        if (existingAssemblySessions >= MAX_ASSEMBLY_UPLOAD_SESSIONS_PER_USER) {
+          throw createHttpError(
+            403,
+            `Upload limit reached. Each user can keep up to ${MAX_ASSEMBLY_UPLOAD_SESSIONS_PER_USER} AssemblyAI sessions.`,
+          );
+        }
+      }
+
       const uploadUrl = await uploadFileToAssembly(localFilePath);
       const transcriptId = await requestTranscript(uploadUrl);
       const transcriptResult = await pollTranscriptResult(transcriptId);
@@ -837,7 +839,7 @@ connectDatabase()
       logInfo(
         `Server running on port ${PORT} (${NODE_ENV}). Config: frontendConfigured=${Boolean(
           FRONTEND_URL,
-        )}, assemblyConfigured=${Boolean(ASSEMBLY_API_KEY)}, audioLimitMb=${MAX_AUDIO_UPLOAD_SIZE_MB}, videoLimitMb=${MAX_VIDEO_UPLOAD_SIZE_MB}, jwtConfigured=${Boolean(
+        )}, assemblyConfigured=${Boolean(ASSEMBLY_API_KEY)}, audioLimitMb=${MAX_AUDIO_UPLOAD_SIZE_MB}, videoLimitMb=${MAX_VIDEO_UPLOAD_SIZE_MB}, assemblySessionLimit=${MAX_ASSEMBLY_UPLOAD_SESSIONS_PER_USER}, jwtConfigured=${Boolean(
           JWT_SECRET,
         )}`,
       );
