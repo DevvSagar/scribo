@@ -30,6 +30,7 @@ const ALLOWED_PLATFORMS = new Set(["gmeet", "zoom", "teams"]);
 const MAX_SCHEDULE_DESCRIPTION_LENGTH = 2000;
 const DEMO_USER_ID = DEMO_CALENDAR_USER_ID;
 const DEFAULT_FRONTEND_FALLBACK = "http://localhost:5173";
+const SCHEDULER_TIME_ZONE = "Asia/Kolkata";
 
 const normalizeFrontendOrigin = (value) => {
   if (typeof value !== "string" || value.trim().length === 0) {
@@ -84,6 +85,39 @@ const sanitizeUrl = (value, { maxLength = 1000 } = {}) => {
   return validator.trim(value).slice(0, maxLength);
 };
 
+const sanitizeTimeZone = (value) => {
+  if (typeof value !== "string") {
+    return SCHEDULER_TIME_ZONE;
+  }
+
+  const timeZone = validator.trim(value);
+
+  if (!timeZone) {
+    return SCHEDULER_TIME_ZONE;
+  }
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone }).format(new Date());
+    return timeZone === "Asia/Calcutta" ? SCHEDULER_TIME_ZONE : timeZone;
+  } catch {
+    return SCHEDULER_TIME_ZONE;
+  }
+};
+
+const sanitizeLocalDateTime = (value, label) => {
+  if (typeof value !== "string") {
+    throw createHttpError(400, `${label} must be a valid local date and time.`);
+  }
+
+  const trimmed = validator.trim(value);
+
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) {
+    throw createHttpError(400, `${label} must be a valid local date and time.`);
+  }
+
+  return `${trimmed}:00`;
+};
+
 const normalizeAttendees = (value) => {
   if (!Array.isArray(value)) {
     throw createHttpError(400, "Attendees must be provided as an array of emails.");
@@ -118,8 +152,11 @@ const parseMeetingPayload = (body) => {
   });
   const platform = sanitizeText(body.platform, { maxLength: 20 }).toLowerCase();
   const meetingLink = sanitizeUrl(body.meetingLink, { maxLength: 1000 });
-  const startTime = new Date(body.startTime);
-  const endTime = new Date(body.endTime);
+  const timeZone = sanitizeTimeZone(body.timeZone);
+  const startTimeLocal = sanitizeLocalDateTime(body.startTime, "Start time");
+  const endTimeLocal = sanitizeLocalDateTime(body.endTime, "End time");
+  const startTime = new Date(body.startTimeIso || body.startTime);
+  const endTime = new Date(body.endTimeIso || body.endTime);
   const attendees = normalizeAttendees(body.attendees || []);
 
   if (title.length < 3) {
@@ -162,6 +199,9 @@ const parseMeetingPayload = (body) => {
     meetingType: "personal",
     platform,
     meetingLink,
+    timeZone,
+    startTimeLocal,
+    endTimeLocal,
     startTime,
     endTime,
     attendees,
@@ -385,8 +425,14 @@ export const createScheduledMeeting = async (req, res, next) => {
           requestBody: {
             summary: payload.title,
             description: payload.description,
-            start: { dateTime: payload.startTime.toISOString() },
-            end: { dateTime: payload.endTime.toISOString() },
+            start: {
+              dateTime: payload.startTimeLocal,
+              timeZone: payload.timeZone,
+            },
+            end: {
+              dateTime: payload.endTimeLocal,
+              timeZone: payload.timeZone,
+            },
             attendees: payload.attendees.map((email) => ({ email })),
             conferenceData: {
               createRequest: {

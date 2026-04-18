@@ -1,9 +1,19 @@
-const formatDateRange = (startTime, endTime) => {
-  const start = new Date(startTime).toLocaleString();
-  const end = new Date(endTime).toLocaleString();
+const getViewerTimeZone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
-  return `${start} - ${end}`;
-};
+const formatDateTime = (value) =>
+  new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).format(new Date(value));
+
+const formatDateRange = (startTime, endTime) =>
+  `${formatDateTime(startTime)} - ${formatDateTime(endTime)}`;
 
 const capitalize = (value) =>
   typeof value === "string" && value.length > 0
@@ -36,6 +46,9 @@ const MeetingList = ({
         <h2 className="mt-2 text-2xl font-semibold text-[#1f1f1f]">
           Upcoming and completed meetings
         </h2>
+        <p className="mt-2 text-sm text-[#666666]">
+          Showing times in your local timezone: {getViewerTimeZone()}
+        </p>
       </div>
 
       <div className="inline-flex rounded-full border border-black/10 bg-[#fafafa] p-1">

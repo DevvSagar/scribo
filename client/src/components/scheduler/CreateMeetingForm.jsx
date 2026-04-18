@@ -13,8 +13,20 @@ const initialState = {
 const parseAttendees = (value) =>
   value
     .split(/[\n,]/)
-    .map((email) => email.trim())
-    .filter(Boolean);
+      .map((email) => email.trim())
+      .filter(Boolean);
+
+const SCHEDULER_TIME_ZONE = "Asia/Kolkata";
+
+const toIsoFromLocalDateTime = (value) => {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    return "";
+  }
+
+  const localDate = new Date(value);
+
+  return Number.isNaN(localDate.getTime()) ? "" : localDate.toISOString();
+};
 
 const CreateMeetingForm = ({ isSubmitting, isGoogleConnected, onSubmit }) => {
   const [formState, setFormState] = useState(initialState);
@@ -55,6 +67,11 @@ const CreateMeetingForm = ({ isSubmitting, isGoogleConnected, onSubmit }) => {
     try {
       await onSubmit({
         ...formState,
+        startTime: formState.startTime,
+        endTime: formState.endTime,
+        startTimeIso: toIsoFromLocalDateTime(formState.startTime),
+        endTimeIso: toIsoFromLocalDateTime(formState.endTime),
+        timeZone: SCHEDULER_TIME_ZONE,
         meetingLink: formState.meetingLink.trim(),
         attendees: parseAttendees(formState.attendees),
       });
@@ -76,6 +93,9 @@ const CreateMeetingForm = ({ isSubmitting, isGoogleConnected, onSubmit }) => {
         <h2 className="mt-2 text-2xl font-semibold text-[#1f1f1f]">
           Create a meeting
         </h2>
+        <p className="mt-2 text-sm text-[#666666]">
+          Google Meet invites are sent in IST ({SCHEDULER_TIME_ZONE}).
+        </p>
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
