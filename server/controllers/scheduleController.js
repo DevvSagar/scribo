@@ -29,6 +29,50 @@ const MAX_LIMIT = 50;
 const ALLOWED_PLATFORMS = new Set(["gmeet", "zoom", "teams"]);
 const MAX_SCHEDULE_DESCRIPTION_LENGTH = 2000;
 const DEMO_USER_ID = DEMO_CALENDAR_USER_ID;
+const DEFAULT_FRONTEND_FALLBACK = "http://localhost:5173";
+
+const normalizeFrontendOrigin = (value) => {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    return "";
+  }
+
+  try {
+    const url = new URL(value.trim());
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      return "";
+    }
+
+    return url.origin;
+  } catch {
+    return "";
+  }
+};
+
+const getFrontendOriginFromRequest = (req) => {
+  const originHeader = normalizeFrontendOrigin(req.get("origin"));
+
+  if (originHeader) {
+    return originHeader;
+  }
+
+  const refererHeader = req.get("referer");
+
+  if (typeof refererHeader === "string" && refererHeader.trim().length > 0) {
+    return normalizeFrontendOrigin(refererHeader);
+  }
+
+  return "";
+};
+
+const getFrontendRedirectBase = (req, statePayload = {}) =>
+  normalizeFrontendOrigin(statePayload.frontendOrigin) ||
+  getFrontendOriginFromRequest(req) ||
+  normalizeFrontendOrigin(FRONTEND_URL) ||
+  DEFAULT_FRONTEND_FALLBACK;
+
+const buildFrontendScheduleRedirectUrl = (req, statePayload, status) =>
+  `${getFrontendRedirectBase(req, statePayload)}/dashboard/schedule?google=${status}`;
 
 const sanitizeText = (value, { maxLength = 2000, fallback = "" } = {}) => {
   if (typeof value !== "string") return fallback;
@@ -185,13 +229,6 @@ const mapGoogleCalendarError = (
   return createHttpError(502, fallbackMessage);
 };
 
-const buildOAuthState = (userId) =>
-  jwt.sign(
-    { userId: userId.toString(), provider: "google-calendar" },
-    process.env.JWT_SECRET,
-    { expiresIn: GOOGLE_CALLBACK_STATE_TTL },
-  );
-
 const getOAuthUserId = (req) => req.user?._id || DEMO_USER_ID;
 
 const storeGoogleTokens = async (userId, tokens) => {
@@ -224,9 +261,7 @@ const storeGoogleTokens = async (userId, tokens) => {
 
 export const getGoogleConnectionStatus = async (req, res, next) => {
   try {
-    const tokenRecord = await getCalendarTokenRecordForUser(req.user._id)
-      .select("email expiryDate updatedAt")
-      .lean();
+    const tokenRecord = await getCalendarTokenRecordForUser(req.user._id);
 
     res.json({
       connected: Boolean(tokenRecord),
@@ -241,7 +276,15 @@ export const getGoogleConnectionStatus = async (req, res, next) => {
 
 export const connectGoogleCalendar = async (req, res, next) => {
   try {
-    const state = buildOAuthState(getOAuthUserId(req));
+    const state = jwt.sign(
+      {
+        userId: getOAuthUserId(req).toString(),
+        provider: "google-calendar",
+        frontendOrigin: getFrontendOriginFromRequest(req) || normalizeFrontendOrigin(FRONTEND_URL),
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: GOOGLE_CALLBACK_STATE_TTL },
+    );
     const authUrl = buildGoogleAuthUrl(state);
     res.redirect(authUrl);
   } catch (error) {
@@ -314,13 +357,13 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
     // Keep account email lookup out of the critical path so OAuth connect does
     // not fail when Google userinfo is unavailable or rejects the request.
 
-    return res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=success`);
+    return res.redirect(buildFrontendScheduleRedirectUrl(req, decoded, "success"));
   } catch (error) {
     logger.error("Google Calendar OAuth callback failed.", {
       message: error.message,
       stack: error.stack,
     });
-    return res.redirect(`${FRONTEND_URL}/dashboard/schedule?google=error`);
+    return res.redirect(buildFrontendScheduleRedirectUrl(req, {}, "error"));
   }
 };
 

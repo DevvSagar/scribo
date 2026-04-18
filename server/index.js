@@ -802,6 +802,12 @@ app.post(
 app.use((error, _req, res, _next) => {
   const statusCode =
     error.statusCode || (error instanceof multer.MulterError ? 400 : 500);
+  const safePublicMessage =
+    typeof error.publicMessage === "string" && error.publicMessage.trim().length > 0
+      ? error.publicMessage.trim()
+      : typeof error.message === "string" && statusCode < 500
+        ? error.message.trim()
+        : "";
 
   if (error.response) {
     logError("Upstream API request failed.", {
@@ -813,11 +819,13 @@ app.use((error, _req, res, _next) => {
   }
 
   const publicMessage =
-    statusCode >= 500
+    safePublicMessage
+      ? safePublicMessage
+      : statusCode >= 500
       ? "Unable to complete the request right now. Please try again."
       : error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE"
         ? `File too large. Maximum upload size is ${Math.max(MAX_AUDIO_UPLOAD_SIZE_MB, MAX_VIDEO_UPLOAD_SIZE_MB)} MB.`
-        : error.publicMessage || error.message || "Request failed.";
+        : "Request failed.";
 
   res.status(statusCode).json({ error: publicMessage });
 });
