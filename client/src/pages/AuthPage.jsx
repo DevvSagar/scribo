@@ -3,8 +3,7 @@ import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { buildApiUrl } from "../lib/apiBaseUrl";
 
 const initialForm = {
   email: "",
@@ -31,18 +30,13 @@ const AuthPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!API_BASE_URL) {
-      setErrorMessage("Missing API URL configuration.");
-      return;
-    }
-
     setIsSubmitting(true);
     setErrorMessage("");
     setStatusMessage("");
 
     try {
       if (mode === "signup") {
-        const signupResponse = await fetch(`${API_BASE_URL}/signup`, {
+        const signupResponse = await fetch(buildApiUrl("/signup"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -60,7 +54,7 @@ const AuthPage = () => {
         setStatusMessage("Account created. Logging you in...");
       }
 
-      const loginResponse = await fetch(`${API_BASE_URL}/login`, {
+      const loginResponse = await fetch(buildApiUrl("/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -11,8 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UploadPanel from "../components/UploadPanel";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { buildApiUrl } from "../lib/apiBaseUrl";
 
 const formatChatDate = (value) =>
   new Date(value).toLocaleString([], {
@@ -89,17 +88,11 @@ const Workspace = () => {
   };
 
   const loadChats = async () => {
-    if (!API_BASE_URL) {
-      setErrorMessage("Missing API URL configuration.");
-      setIsLoadingChats(false);
-      return;
-    }
-
     try {
       setIsLoadingChats(true);
       setErrorMessage("");
 
-      const response = await fetch(`${API_BASE_URL}/chats`, {
+      const response = await fetch(buildApiUrl("/chats"), {
         credentials: "include",
       });
 
@@ -166,7 +159,7 @@ const Workspace = () => {
   };
 
   const handleDeleteHistory = async () => {
-    if (!selectedHistory || !API_BASE_URL) {
+    if (!selectedHistory) {
       return;
     }
 
@@ -174,13 +167,10 @@ const Workspace = () => {
       setIsDeletingHistory(true);
       setErrorMessage("");
 
-      const response = await fetch(
-        `${API_BASE_URL}/chats/${encodeURIComponent(selectedHistory._id)}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
+      const response = await fetch(buildApiUrl(`/chats/${encodeURIComponent(selectedHistory._id)}`), {
+        method: "DELETE",
+        credentials: "include",
+      });
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {

@@ -1,5 +1,14 @@
 {
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://scribo-ybl1.onrender.com/api/$1" },
+    { "source": "/upload", "destination": "https://scribo-ybl1.onrender.com/upload" },
+    { "source": "/signup", "destination": "https://scribo-ybl1.onrender.com/signup" },
+    { "source": "/login", "destination": "https://scribo-ybl1.onrender.com/login" },
+    { "source": "/logout", "destination": "https://scribo-ybl1.onrender.com/logout" },
+    { "source": "/me", "destination": "https://scribo-ybl1.onrender.com/me" },
+    { "source": "/chat", "destination": "https://scribo-ybl1.onrender.com/chat" },
+    { "source": "/chats/(.*)", "destination": "https://scribo-ybl1.onrender.com/chats/$1" },
+    { "source": "/chats", "destination": "https://scribo-ybl1.onrender.com/chats" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -1,8 +1,7 @@
 import { motion as Motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Mail } from "lucide-react";
 import { useState } from "react";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { buildApiUrl } from "../lib/apiBaseUrl";
 const SUBMIT_COOLDOWN_MS = 8000;
 
 const XIcon = ({ className }) => (
@@ -111,11 +110,6 @@ const Contact = () => {
       return;
     }
 
-    if (!API_BASE_URL) {
-      showToast("error", "Contact form is not configured yet.");
-      return;
-    }
-
     if (isSubmitting) return;
 
     const now = Date.now();
@@ -127,7 +121,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/send-email`, {
+      const response = await fetch(buildApiUrl("/api/send-email"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

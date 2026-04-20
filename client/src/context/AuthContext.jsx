@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
+import { buildApiUrl } from "../lib/apiBaseUrl";
 
 const AuthContext = createContext(null);
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,14 +11,8 @@ export const AuthProvider = ({ children }) => {
   const refreshSession = async () => {
     setIsLoadingAuth(true);
 
-    if (!API_BASE_URL) {
-      setUser(null);
-      setIsLoadingAuth(false);
-      return;
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/me`, {
+      const response = await fetch(buildApiUrl("/me"), {
         credentials: "include",
       });
 
@@ -47,12 +41,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      if (API_BASE_URL) {
-        await fetch(`${API_BASE_URL}/logout`, {
-          method: "POST",
-          credentials: "include",
-        });
-      }
+      await fetch(buildApiUrl("/logout"), {
+        method: "POST",
+        credentials: "include",
+      });
     } catch {
       // Clear local auth state even if the request fails.
     } finally {

@@ -11,12 +11,12 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { buildApiUrl } from "../lib/apiBaseUrl";
 
 const DEFAULT_MAX_AUDIO_FILE_SIZE_MB = 100;
 const DEFAULT_MAX_VIDEO_FILE_SIZE_MB = 200;
 const GUEST_MAX_AUDIO_FILE_SIZE_MB = 100;
 const GUEST_MAX_VIDEO_FILE_SIZE_MB = 200;
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 const UPLOAD_TOKEN = import.meta.env.VITE_UPLOAD_TOKEN;
 const ALLOWED_FILE_TYPES = /\.(mp3|wav|m4a|mp4)$/i;
 const VIDEO_FILE_TYPES = /\.mp4$/i;
@@ -118,11 +118,6 @@ const UploadPanel = () => {
   const handleUploadAction = async () => {
     if (!file || uploadPhase === "processing") return;
 
-    if (!API_BASE_URL) {
-      setErrorMessage("App configuration error. Missing API URL.");
-      return;
-    }
-
     if (uploadPhase === "done") return;
 
     const formData = new FormData();
@@ -134,7 +129,7 @@ const UploadPanel = () => {
     setLoadingStage("Uploading file...");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/upload`, {
+      const response = await fetch(buildApiUrl("/upload"), {
         method: "POST",
         headers: {
           "x-upload-token": UPLOAD_TOKEN,

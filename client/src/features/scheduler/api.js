@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { buildApiUrl } from "../../lib/apiBaseUrl";
 
 const parseJson = async (response) => {
   const data = await response.json().catch(() => ({}));
@@ -11,11 +11,7 @@ const parseJson = async (response) => {
 };
 
 const request = async (path, options = {}) => {
-  if (!API_BASE_URL) {
-    throw new Error("Missing API URL configuration.");
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     credentials: "include",
     ...options,
     headers: {
@@ -31,7 +27,7 @@ export const getGoogleCalendarStatus = () =>
   request("/api/schedule/google/status");
 
 export const getGoogleCalendarConnectUrl = () =>
-  `${API_BASE_URL}/api/schedule/google/connect`;
+  buildApiUrl("/api/schedule/google/connect");
 
 export const disconnectGoogleCalendar = () =>
   request("/api/schedule/google/disconnect", {
