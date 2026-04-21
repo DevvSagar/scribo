@@ -66,14 +66,23 @@ const getFrontendOriginFromRequest = (req) => {
   return "";
 };
 
-const getFrontendRedirectBase = (req, statePayload = {}) =>
+const getFrontendRedirectBase = (
+  req,
+  statePayload = {},
+  { allowRequestHeaders = true } = {},
+) =>
   normalizeFrontendOrigin(statePayload.frontendOrigin) ||
-  getFrontendOriginFromRequest(req) ||
+  (allowRequestHeaders ? getFrontendOriginFromRequest(req) : "") ||
   normalizeFrontendOrigin(FRONTEND_URL) ||
   DEFAULT_FRONTEND_FALLBACK;
 
-const buildFrontendScheduleRedirectUrl = (req, statePayload, status) =>
-  `${getFrontendRedirectBase(req, statePayload)}/dashboard/schedule?google=${status}`;
+const buildFrontendScheduleRedirectUrl = (
+  req,
+  statePayload,
+  status,
+  options,
+) =>
+  `${getFrontendRedirectBase(req, statePayload, options)}/dashboard/schedule?google=${status}`;
 
 const sanitizeText = (value, { maxLength = 2000, fallback = "" } = {}) => {
   if (typeof value !== "string") return fallback;
@@ -379,18 +388,19 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
     }
 
     const decoded = jwt.verify(state, process.env.JWT_SECRET);
-    const oauthUserId = getOAuthUserId(req);
+    const oauthUserId = decoded.userId;
 
     if (
       decoded.provider !== "google-calendar" ||
-      decoded.userId !== oauthUserId.toString()
+      typeof oauthUserId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(oauthUserId)
     ) {
       throw createHttpError(403, "Google OAuth state is invalid.");
     }
 
     const { client, tokens } = await exchangeGoogleCode(code);
     logger.info("Google OAuth token exchange completed.", {
-      userId: oauthUserId.toString(),
+      userId: oauthUserId,
       hasAccessToken: Boolean(tokens?.access_token),
       hasRefreshToken: Boolean(tokens?.refresh_token),
       hasExpiryDate: Boolean(tokens?.expiry_date),
@@ -401,7 +411,7 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
       await storeGoogleTokens(oauthUserId, tokens);
     } catch (error) {
       logger.error("Google OAuth token persistence failed.", {
-        userId: oauthUserId.toString(),
+        userId: oauthUserId,
         message: error.message,
       });
     }
@@ -416,7 +426,11 @@ export const handleGoogleCalendarCallback = async (req, res, _next) => {
       message: error.message,
       stack: error.stack,
     });
-    return res.redirect(buildFrontendScheduleRedirectUrl(req, {}, "error"));
+    return res.redirect(
+      buildFrontendScheduleRedirectUrl(req, {}, "error", {
+        allowRequestHeaders: false,
+      }),
+    );
   }
 };
 
