@@ -40,7 +40,8 @@ const uploadsDir = path.join(__dirname, "uploads");
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProduction = NODE_ENV === "production";
 const PORT = Number.parseInt(process.env.PORT || "5001", 10);
-const FRONTEND_URL = process.env.FRONTEND_URL;
+const DEFAULT_DEV_FRONTEND_URL = "http://localhost:5173";
+const FRONTEND_URL = process.env.FRONTEND_URL || (!isProduction ? DEFAULT_DEV_FRONTEND_URL : "");
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY;
@@ -83,9 +84,9 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const requiredEnvVars = ["ASSEMBLY_API_KEY", "MONGODB_URI", "JWT_SECRET", "FRONTEND_URL"];
+const requiredEnvVars = ["ASSEMBLY_API_KEY", "MONGODB_URI", "JWT_SECRET"];
 if (isProduction) {
-  requiredEnvVars.push("PORT");
+  requiredEnvVars.push("FRONTEND_URL", "PORT");
 }
 
 const missingEnvVars = requiredEnvVars.filter((key) => {
@@ -132,6 +133,20 @@ const validateAbsoluteUrl = (value, label) => {
   }
 
   return parsed;
+};
+
+const isLocalDevelopmentOrigin = (origin) => {
+  if (isProduction) return false;
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    return (
+      protocol === "http:" &&
+      ["localhost", "127.0.0.1", "::1"].includes(hostname)
+    );
+  } catch {
+    return false;
+  }
 };
 
 if (FRONTEND_URL !== normalizeOrigin(FRONTEND_URL)) {
@@ -470,7 +485,10 @@ app.use(
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
-      if (normalizeOrigin(origin) === allowedOrigin) {
+      if (
+        normalizeOrigin(origin) === allowedOrigin ||
+        isLocalDevelopmentOrigin(origin)
+      ) {
         return callback(null, true);
       }
 

@@ -2,6 +2,11 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 
+const backendProxy = {
+  target: "http://localhost:5001",
+  changeOrigin: true,
+};
+
 export default defineConfig({
   plugins: [
     react(),        // ✅ MUST be enabled
@@ -9,14 +14,14 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      "/api": "http://localhost:5001",
-      "/upload": "http://localhost:5001",
-      "/signup": "http://localhost:5001",
-      "/login": "http://localhost:5001",
-      "/logout": "http://localhost:5001",
-      "/me": "http://localhost:5001",
-      "/chat": "http://localhost:5001",
-      "/chats": "http://localhost:5001",
+      "/api": backendProxy,
+      "/upload": backendProxy,
+      "/signup": backendProxy,
+      "/login": backendProxy,
+      "/logout": backendProxy,
+      "/me": backendProxy,
+      "/chat": backendProxy,
+      "/chats": backendProxy,
     },
     // Avoid native macOS file-watch issues when fsevents is blocked by Gatekeeper.
     watch: {
